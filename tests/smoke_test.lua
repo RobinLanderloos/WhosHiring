@@ -111,21 +111,17 @@ _G.UnitName = function() return "Me" end
 _G.GetNormalizedRealmName = function() return "Realm" end
 _G.GetGuildInfo = function() return "My Guild" end
 _G.date = os.date
-local whoQuery
-_G.WhoFrameEditBox = newWidget()
-_G.WhoFrameWhoButton = newWidget()
-rawset(WhoFrameWhoButton, "Click", function() whoQuery = WhoFrameEditBox:GetText() end)
--- Forever's Friends window: tab 2 is Raid, the Who tab is found by its label.
-_G.WHO = "Who"
-_G.FriendsFrame = newWidget(); FriendsFrame:Hide(); rawset(FriendsFrame, "numTabs", 4)
-_G.WhoFrame = newWidget(FriendsFrame); WhoFrame:Hide()
-local friendsTab
-for i, label in ipairs({ "Friends", "Raid", "Who", "Quick Join" }) do
-  local tab = newWidget(); tab:SetText(label)
-  rawset(tab, "Click", function() friendsTab = label; WhoFrame.shown = label == "Who" end)
-  _G["FriendsFrameTab" .. i] = tab
-end
-_G.ToggleFriendsFrame = function() FriendsFrame:Show() end
+local whoQuery, whoToUi
+local whoResults = {
+  { fullName = "Olly-Realm", fullGuildName = "Night Watch", level = 60, classStr = "Warrior", area = "Orgrimmar" },
+  { fullName = "Pip-Realm", fullGuildName = "Night Watchers", level = 20, classStr = "Mage", area = "Durotar" },
+}
+_G.C_FriendList = {
+  SendWho = function(q) whoQuery = q end,
+  SetWhoToUi = function(v) whoToUi = v end,
+  GetNumWhoResults = function() return #whoResults end,
+  GetWhoInfo = function(i) return whoResults[i] end,
+}
 local itemRefHooks = {}
 _G.SetItemRef = function() end
 _G.hooksecurefunc = function(name, fn) if name == "SetItemRef" then itemRefHooks[#itemRefHooks + 1] = fn end end
@@ -395,10 +391,21 @@ nightRow = rowOf("Night Watch")
 nightRow.scripts.OnClick(nightRow)
 check("an open named guild has a Who's online button", visible(nightRow.whoButton))
 nightRow.whoButton.scripts.OnClick(nightRow.whoButton)
-check("the button opens the tab labelled Who", friendsTab == "Who" and visible(WhoFrame), tostring(friendsTab))
-check("what the Who button found is saved", WhosHiringDB.whoDebug and WhosHiringDB.whoDebug.shown == true
-  and WhosHiringDB.whoDebug.tabs[2] == "2=Raid")
 check("the button searches the guild's online members", whoQuery == 'g-"Night Watch"', tostring(whoQuery))
+check("results are routed away from chat during the search", whoToUi == true)
+check("the row says it is searching", shownTexts():find("Searching...", 1, true) ~= nil, shownTexts())
+fire("WHO_LIST_UPDATE")
+texts = shownTexts()
+check("the row lists the guild's online members", texts:find("Online now: 1", 1, true) ~= nil
+  and texts:find("Olly · 60 Warrior · Orgrimmar", 1, true) ~= nil and texts:find("Pip", 1, true) == nil, texts)
+check("/who goes back to normal afterwards", whoToUi == false)
+local ollyWhisper = find(function(w) return rawget(w, "sender") == "Olly-Realm" and visible(w) end)
+check("online members have a whisper button", ollyWhisper ~= nil)
+check("the search is noted for diagnosis", WhosHiringDB.whoDebug and WhosHiringDB.whoDebug.answered == true
+  and WhosHiringDB.whoDebug.results == 2)
+nightRow.whoButton.scripts.OnClick(nightRow.whoButton)
+runTimers()
+check("no answer from the server is explained", shownTexts():find("No answer", 1, true) ~= nil, shownTexts())
 nightRow.scripts.OnClick(nightRow)
 check("closing the row hides the Who button", not visible(nightRow.whoButton))
 chat("CHAT_MSG_CHANNEL", "We are recruiting! /w me", "Una-Realm", "2. Trade - City", "Trade - City")

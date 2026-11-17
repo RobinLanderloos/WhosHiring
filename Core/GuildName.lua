@@ -101,3 +101,23 @@ function GuildName.whoQuery(name)
   if not name or name == "" then return nil end
   return 'g-"' .. name:gsub('"', "") .. '"'
 end
+
+-- Members from /who results (C_FriendList.GetWhoInfo tables). `g-` matches
+-- part of a guild name, so only exact matches are kept, unless there are none.
+function GuildName.onlineMembers(results, name)
+  local key = name and GuildName.normalize(name)
+  local exact, all = {}, {}
+  for _, info in ipairs(results) do
+    local member = {
+      name = info.fullName or "?", guild = info.fullGuildName,
+      level = info.level, class = info.classStr, zone = info.area,
+    }
+    all[#all + 1] = member
+    if key and info.fullGuildName and GuildName.normalize(info.fullGuildName) == key then
+      exact[#exact + 1] = member
+    end
+  end
+  local list = #exact > 0 and exact or all
+  table.sort(list, function(a, b) return a.name < b.name end)
+  return list
+end

@@ -6,7 +6,7 @@ A World of Warcraft (WoW Forever) addon that keeps a list of guilds recruiting i
 
 Open the list with `/wh`, `/whoshiring` or the minimap button.
 
-- **Rows** show the guild, its tags (hover over them to see which word set each), its latest message, how many people advertised it and when. Click a row to see every poster's messages, each with a Whisper button, and a Who's online button that searches the guild's members who are online now.
+- **Rows** show the guild, its tags (hover over them to see which word set each), its latest message, how many people advertised it and when. Click a row to see every poster's messages, each with a Whisper button, and a Who's online button that lists the guild's members who are online now, so you can whisper someone else when the poster is offline.
 - **Star** a guild to keep it at the top; **✕** (not interested) hides it and stops recording it. The Dismissed tab can restore it.
 - **Filters** opens tag chips: chips in the same row are OR, rows are AND. Search matches names and messages.
 - **Alert me on these chips** announces each new guild that matches, once, in chat (click the name to open it).
