@@ -155,6 +155,7 @@ end
 
 local function chat(event, text, sender, channelName, baseName)
   fire(event, text, sender, "Common", channelName or "", "", "", 0, 2, baseName or "")
+  runTimers() -- the batched redraw of the open list
 end
 
 check("saved list is set up on load", type(WhosHiringDB) == "table" and type(WhosHiringDB.guilds) == "table")

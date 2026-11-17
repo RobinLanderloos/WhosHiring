@@ -416,7 +416,15 @@ function Window.IsShown()
   return frame ~= nil and frame:IsShown()
 end
 
--- A new message arrived: redraw if the list is open.
+-- A new message arrived: redraw if the list is open, at most twice a second
+-- so busy chat does not rebuild the list for every line.
+local refreshQueued = false
 function Window.OnRecorded()
-  Window.Refresh()
+  if not Window.IsShown() or refreshQueued then return end
+  if not (C_Timer and C_Timer.After) then return Window.Refresh() end
+  refreshQueued = true
+  C_Timer.After(0.5, function()
+    refreshQueued = false
+    Window.Refresh()
+  end)
 end
