@@ -142,7 +142,7 @@
       "id": "010",
       "title": "Debug mode and report",
       "description": "`/wh debug` toggles logging of near-miss rejected messages and channel names seen. `/wh report` writes a summary. Both are stored in SavedVariables so they can be read after /reload.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/010-debug-mode-and-report.md",
       "acceptanceCriteria": [
         "Near misses and channel names are logged to SavedVariables while debug is on, with a capped size",

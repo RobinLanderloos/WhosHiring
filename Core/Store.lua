@@ -245,3 +245,21 @@ function Store.newCount(db)
   end
   return n
 end
+
+local DEBUG_LOG_MAX = 200
+
+-- Debug mode: remembers rejected messages that came close, and the channel
+-- names seen, so the rules can be tuned from the saved variables (ADR 0002).
+function Store.logDebug(db, item)
+  db.debugLog = type(db.debugLog) == "table" and db.debugLog or {}
+  local log = db.debugLog
+  log.nearMisses = log.nearMisses or {}
+  log.channels = log.channels or {}
+  log.channels[item.channel] = (log.channels[item.channel] or 0) + 1
+  if not item.verdict then return end
+  table.insert(log.nearMisses, 1, {
+    text = item.text, sender = item.sender, channel = item.channel, time = item.time,
+    signal = item.verdict.signal, exclusion = item.verdict.exclusion,
+  })
+  for i = #log.nearMisses, DEBUG_LOG_MAX + 1, -1 do log.nearMisses[i] = nil end
+end

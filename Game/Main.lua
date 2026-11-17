@@ -50,14 +50,19 @@ function Game.OnChat(event, text, sender, _, channelName, _, _, _, _, channelBas
   local full = Game.FullName(sender)
   if full == myName() then return end
 
-  local status, entry, verdict = ns.Store.record(ns.db, {
+  local message = {
     text = text,
     sender = full,
     channel = channelLabel(event, channelName, channelBaseName),
     time = time(),
     realm = Game.RealmOf(full),
     ownGuild = GetGuildInfo and GetGuildInfo("player") or nil,
-  })
+  }
+  local status, entry, verdict = ns.Store.record(ns.db, message)
+  if ns.db.settings.debug then
+    message.verdict = status == "ignored" and verdict and verdict.nearMiss and verdict or nil
+    ns.Store.logDebug(ns.db, message)
+  end
   if ns.OnRecorded then ns.OnRecorded(status, entry, verdict, text, full) end
 end
 

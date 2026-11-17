@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,8 +12,8 @@ Open
 
 ## Acceptance criteria
 
-- [ ] Near misses and channel names are logged to SavedVariables while debug is on, with a capped size
-- [ ] /wh report writes counts and settings to SavedVariables
+- [x] Near misses and channel names are logged to SavedVariables while debug is on, with a capped size
+- [x] /wh report writes counts and settings to SavedVariables
 
 ## Blocked by
 

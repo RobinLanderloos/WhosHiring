@@ -266,3 +266,17 @@ test("everything counts as new before the list was ever opened", function()
   Store.record(db, msg("<Old> is recruiting", "A-Realm", 100))
   eq(Store.newCount(db), 1)
 end)
+
+test("the debug log keeps the newest near misses up to a cap, and counts channels", function()
+  local db = Store.init(nil)
+  for i = 1, 205 do
+    Store.logDebug(db, { text = "msg " .. i, sender = "A-Realm", channel = i % 2 == 0 and "Trade" or "General",
+      time = i, verdict = { signal = "x", exclusion = "y" } })
+  end
+  eq(#db.debugLog.nearMisses, 200, "capped")
+  eq(db.debugLog.nearMisses[1].text, "msg 205", "newest first")
+  eq(db.debugLog.nearMisses[200].text, "msg 6", "oldest dropped")
+  eq(db.debugLog.nearMisses[1].exclusion, "y", "the rule that rejected it")
+  eq(db.debugLog.channels.Trade, 102, "Trade count")
+  eq(db.debugLog.channels.General, 103, "General count")
+end)

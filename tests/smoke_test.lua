@@ -331,6 +331,19 @@ if mm then
   end
 end
 
+local _, out = slash("WHOSHIRING", "debug")
+check("/wh debug turns debug mode on", WhosHiringDB.settings.debug == true and out:find("debug on", 1, true) ~= nil, out)
+chat("CHAT_MSG_CHANNEL", "looking for more players to quest with in Duskwood", "Q-Realm", "1. General - Elwynn", "General - Elwynn")
+check("near misses are logged in debug mode", WhosHiringDB.debugLog and WhosHiringDB.debugLog.nearMisses[1]
+  and WhosHiringDB.debugLog.nearMisses[1].sender == "Q-Realm")
+check("channel names are counted in debug mode", WhosHiringDB.debugLog.channels["General - Elwynn"] == 1)
+ok, out = slash("WHOSHIRING", "report")
+check("/wh report runs", ok, out)
+check("/wh report is saved", type(WhosHiringDB.report) == "table" and table.concat(WhosHiringDB.report, " / "):find("channels seen: General", 1, true) ~= nil,
+  WhosHiringDB.report and table.concat(WhosHiringDB.report, " / "))
+slash("WHOSHIRING", "debug")
+check("/wh debug again turns it off", WhosHiringDB.settings.debug == nil)
+
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
 
