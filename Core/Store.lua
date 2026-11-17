@@ -8,20 +8,53 @@ ns.Store = Store
 local function id(realm, key) return realm .. "|" .. key end
 
 -- Raise when Detect or Tags rules change, so saved entries are re-checked.
-Store.RULES_VERSION = 2
+Store.RULES_VERSION = 3
+
+-- An unknown entry whose messages now show a guild name moves into that
+-- guild (created if needed). Returns true when it moved.
+local function nameUnknown(db, eid, entry)
+  local name
+  for _, m in ipairs(entry.messages) do
+    name = name or ns.GuildName.parse(m.text)
+  end
+  if not name then return false end
+  local key = ns.GuildName.normalize(name)
+  local targetId = entry.realm .. "|" .. key
+  if db.dismissed[targetId] then
+    db.guilds[eid] = nil
+    return true
+  end
+  local target = db.guilds[targetId]
+  if not target then
+    target = { key = key, realm = entry.realm, name = name, firstSeen = entry.firstSeen,
+      lastSeen = entry.lastSeen, messages = {} }
+    db.guilds[targetId] = target
+  end
+  for _, m in ipairs(entry.messages) do target.messages[#target.messages + 1] = m end
+  target.firstSeen = math.min(target.firstSeen or entry.firstSeen, entry.firstSeen or target.firstSeen)
+  target.lastSeen = math.max(target.lastSeen or entry.lastSeen, entry.lastSeen or target.lastSeen)
+  db.posters[entry.unknownPoster] = key
+  db.guilds[eid] = nil
+  Store.retag(target)
+  return true
+end
 
 -- Re-applies the current rules to every saved entry: messages that no longer
--- count as recruitment are dropped (and entries left empty), tags recomputed.
+-- count as recruitment are dropped (and entries left empty), unknown entries
+-- whose guild name can now be read move into it, tags are recomputed.
 function Store.recheck(db)
-  for eid, entry in pairs(db.guilds) do
+  local ids = {}
+  for eid in pairs(db.guilds) do ids[#ids + 1] = eid end
+  for _, eid in ipairs(ids) do
+    local entry = db.guilds[eid]
     local kept = {}
     for _, m in ipairs(entry.messages or {}) do
       if ns.Detect.classify(m.text).isRecruit then kept[#kept + 1] = m end
     end
+    entry.messages = kept
     if #kept == 0 then
       db.guilds[eid] = nil
-    else
-      entry.messages = kept
+    elseif not (entry.unknownPoster and nameUnknown(db, eid, entry)) then
       Store.retag(entry)
     end
   end

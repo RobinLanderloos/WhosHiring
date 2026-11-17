@@ -296,3 +296,22 @@ test("a rules update re-checks saved entries once at load", function()
   eq(db.guilds["Realm|yes"].tags.healer, nil, "tags recomputed")
   eq(db.rulesVersion, Store.RULES_VERSION, "version stored")
 end)
+
+test("a rules update moves unknown entries whose name can now be read into their guild", function()
+  local saved = {
+    rulesVersion = 2,
+    guilds = {
+      ["Realm|?luc-realm"] = { key = "?luc-realm", realm = "Realm", unknownPoster = "Luc-Realm", firstSeen = 5, lastSeen = 9, tags = {},
+        messages = { { sender = "Luc-Realm", text = "[Bibo Ergo Sum] Horde PvE Guild recruit! casual raiding", first = 5, last = 9, count = 2 } } },
+    },
+  }
+  local db = Store.init(saved)
+  eq(db.guilds["Realm|?luc-realm"], nil, "unknown entry gone")
+  local entry = db.guilds["Realm|bibo ergo sum"]
+  eq(entry and entry.name, "Bibo Ergo Sum", "named guild")
+  eq(entry.messages[1].count, 2, "message kept")
+  eq(entry.firstSeen, 5, "first seen kept")
+  eq(entry.lastSeen, 9, "last seen kept")
+  eq(entry.tags.raiding, "raiding", "tags")
+  eq(db.posters["Luc-Realm"], "bibo ergo sum", "poster linked")
+end)

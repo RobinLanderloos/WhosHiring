@@ -54,3 +54,17 @@ test("when no result matches the name exactly, all results are kept", function()
   local results = { { fullName = "Bo-Realm", fullGuildName = "Night Watchers" } }
   eq(#ns.GuildName.onlineMembers(results, "Night Watch"), 1)
 end)
+
+local GREEK = "[Bibo Ergo Sum] \206\149\206\187\206\187\206\183\206\189\206\185\206\186\207\140 Horde PvE Guild \206\186\206\172\206\189\206\181\206\185 recruit! /w me"
+
+test("a name in square brackets at the start is the guild name (seen in Trade)", function()
+  eq(parse(GREEK), "Bibo Ergo Sum", "square brackets")
+  eq(parse("<Night Watch> [EN] recruiting"), "Night Watch", "angle brackets win")
+end)
+
+test("item links and language codes in square brackets are not guild names", function()
+  eq(parse("Selling |cffffffff|Hitem:2589::::::::|h[Linen Cloth]|h|r, guild recruiting too"), nil, "item link")
+  eq(parse("[EN] recruiting all classes, /w me"), nil, "language code")
+  eq(parse("[PVE] recruiting all classes, /w me"), nil, "short all-caps code")
+  eq(parse("[EN] [Iron Oath] recruiting"), "Iron Oath", "code then name")
+end)

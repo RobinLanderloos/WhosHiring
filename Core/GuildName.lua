@@ -68,12 +68,24 @@ local function nameAfter(words, i)
 end
 
 -- The guild name as written, or nil when none can be found.
+-- "[EN]", "[PVE]", "[60]": short codes in square brackets, not names.
+local function isCode(inner)
+  return inner:find("^%u%u?%u?%u?$") ~= nil or inner:find("^%d+%+?$") ~= nil
+end
+
 function GuildName.parse(text)
   local clean = ns.Text.strip(text)
   local name = clean:match("<%s*([^<>]-)%s*>")
   if name and name ~= "" then return name end
 
-  local words = split(clean)
+  -- [Square brackets], seen in Trade. Item and other links are dropped
+  -- first: their visible text is also in square brackets.
+  local noLinks = ns.Text.strip((text:gsub("|H.-|h.-|h", " ")))
+  for inner in noLinks:gmatch("%[%s*([^%[%]]-)%s*%]") do
+    if inner ~= "" and not isCode(inner) then return inner end
+  end
+
+  local words = split((noLinks:gsub("%[[^%[%]]*%]", " ")))
   for i, w in ipairs(words) do
     local nextWord = words[i + 1]
     if (w.lower == "is" or w.lower == "are") and nextWord and afterIs[nextWord.lower] then

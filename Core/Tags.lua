@@ -80,6 +80,11 @@ Tags.definitions = {
   { id = "de", group = "language", label = "DE", patterns = { word("german"), word("deutsch%a*"), "%[de%]", word("ger") } },
   { id = "fr", group = "language", label = "FR", patterns = { word("french"), "fran.-ais", "%[fr%]" } },
   { id = "es", group = "language", label = "ES", patterns = { word("spanish"), "espa.-ol", "%[es%]" } },
+  -- Written in another alphabet (the game's English fonts cannot show these).
+  { id = "gr", group = "language", label = "GR", reason = "Greek letters",
+    patterns = { word("greek"), "%[gr%]", "[\206\207][\128-\191]" } },
+  { id = "ru", group = "language", label = "RU", reason = "Cyrillic letters",
+    patterns = { word("russian"), "%[ru%]", "[\208\209][\128-\191]" } },
   { id = "eu", group = "language", label = "EU times", patterns = { word("eu"), word("cet"), word("cest"), word("gmt"), word("bst") } },
   { id = "na", group = "language", label = "NA times", patterns = { word("na"), word("est"), word("pst"), word("cst"), word("[ep]dt") } },
 
@@ -126,6 +131,8 @@ function Tags.extract(text, guildName)
       for _, p in ipairs(def.except) do source = source:gsub(p, " ") end
     end
     local hit = earliest(source, def.patterns)
+    -- A matched letter of another alphabet is unreadable in the tooltip.
+    if hit and def.reason and hit:byte(1) > 127 then hit = def.reason end
     if hit then found[def.id] = hit end
   end
   local all = earliest(t, ALL_CLASSES)

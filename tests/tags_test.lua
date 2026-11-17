@@ -102,3 +102,11 @@ test("healer words still match", function()
     eq(has(tags("<X> recruiting " .. w), "healer"), true, w)
   end
 end)
+
+test("Greek and Cyrillic letters tag the language (seen in Trade)", function()
+  local greek = tags("[Bibo Ergo Sum] \206\149\206\187\206\187\206\183\206\189\206\185\206\186\207\140 Horde PvE Guild recruit!")
+  eq(greek.gr, "Greek letters", "greek")
+  local cyrillic = tags("<X> \208\160\208\181\208\186\209\128\209\131\209\130 recruiting")
+  eq(cyrillic.ru, "Cyrillic letters", "cyrillic")
+  eq(has(tags("<X> recruiting, all welcome"), "gr"), false, "plain English")
+end)
