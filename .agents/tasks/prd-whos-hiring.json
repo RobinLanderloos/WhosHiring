@@ -34,7 +34,7 @@
       "id": "003",
       "title": "Expand a guild to see every poster",
       "description": "Clicking a row expands it to show every poster's messages with times and counts. Identical repeats from the same poster are stored once, with a count and a last-seen time. Each poster has a Whisper button.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/003-expand-a-guild-to-see-every-poster.md",
       "acceptanceCriteria": [
         "Identical repeats increase the count instead of adding a message (unit test)",

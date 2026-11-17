@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,9 +12,9 @@ Clicking a row expands it to show every poster's messages with times and counts.
 
 ## Acceptance criteria
 
-- [ ] Identical repeats increase the count instead of adding a message (unit test)
-- [ ] The expanded row lists every poster with message, time and count
-- [ ] The Whisper button opens a whisper to that poster
+- [x] Identical repeats increase the count instead of adding a message (unit test)
+- [x] The expanded row lists every poster with message, time and count
+- [x] The Whisper button opens a whisper to that poster
 
 ## Blocked by
 

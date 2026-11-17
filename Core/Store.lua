@@ -36,6 +36,26 @@ local function mergeUnknown(db, entry, sender)
   db.guilds[unknownId] = nil
 end
 
+-- A repeat of the same text by the same poster only counts (spam macros).
+local function addMessage(entry, message)
+  local same = ns.Text.normalize(message.text)
+  for _, m in ipairs(entry.messages) do
+    if m.sender == message.sender and ns.Text.normalize(m.text) == same then
+      m.count = m.count + 1
+      m.last = math.max(m.last, message.time)
+      m.text = message.text
+      m.channel = message.channel
+      return m
+    end
+  end
+  local m = {
+    sender = message.sender, text = message.text, channel = message.channel,
+    first = message.time, last = message.time, count = 1,
+  }
+  entry.messages[#entry.messages + 1] = m
+  return m
+end
+
 -- message = { text, sender, channel, time, realm }
 -- Returns a status ("new", "updated", "ignored") and the entry.
 function Store.record(db, message)
@@ -67,11 +87,8 @@ function Store.record(db, message)
     db.posters[message.sender] = key
     mergeUnknown(db, entry, message.sender)
   end
-  entry.lastSeen = message.time
-  entry.messages[#entry.messages + 1] = {
-    sender = message.sender, text = message.text, channel = message.channel,
-    first = message.time, last = message.time, count = 1,
-  }
+  entry.lastSeen = math.max(entry.lastSeen or message.time, message.time)
+  addMessage(entry, message)
   return status, entry, verdict
 end
 
@@ -90,4 +107,26 @@ function Store.posterCount(entry)
     if not seen[m.sender] then seen[m.sender] = true; n = n + 1 end
   end
   return n
+end
+
+-- Each poster once, most recently seen first, with their messages newest first.
+function Store.posters(entry)
+  local bySender, list = {}, {}
+  for _, m in ipairs(entry.messages) do
+    local p = bySender[m.sender]
+    if not p then
+      p = { sender = m.sender, messages = {}, lastSeen = m.last }
+      bySender[m.sender] = p
+      list[#list + 1] = p
+    end
+    p.messages[#p.messages + 1] = m
+    if m.last > p.lastSeen then p.lastSeen = m.last end
+  end
+  local function newest(a, b) return a.last > b.last end
+  for _, p in ipairs(list) do table.sort(p.messages, newest) end
+  table.sort(list, function(a, b)
+    if a.lastSeen ~= b.lastSeen then return a.lastSeen > b.lastSeen end
+    return a.sender < b.sender
+  end)
+  return list
 end

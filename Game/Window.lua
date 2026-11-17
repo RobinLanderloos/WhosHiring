@@ -14,6 +14,12 @@ local FRAME_NAME = "WhosHiringFrame"
 
 local frame, content, emptyText
 local rows = {}
+local expanded = {} -- row id -> true while open (this session only)
+
+-- "Bob" from "Bob-Realm".
+local function shortName(sender)
+  return (sender:match("^[^-]+")) or sender
+end
 
 local function saveLayout()
   local point, _, relativePoint, x, y = frame:GetPoint()
@@ -61,25 +67,106 @@ local function newRow()
   row.messageText:SetPoint("RIGHT", -6, 0)
   row.messageText:SetJustifyH("LEFT")
   row.messageText:SetWordWrap(false)
+
+  row.detailLines = {} -- reused widgets of the expanded part
+  row:RegisterForClicks("LeftButtonUp")
+  row:SetScript("OnClick", function(self)
+    local key = self.data and self.data.id
+    if key then
+      expanded[key] = not expanded[key] or nil
+      Window.Refresh()
+    end
+  end)
   return row
 end
 
 -- "Night Watch", or "Unknown guild, posted by Bob" (realm left off).
 function Window.DisplayName(r)
   if r.name then return r.name end
-  return L.UNKNOWN_GUILD:format((r.unknownPoster or "?"):match("^[^-]+"))
+  return L.UNKNOWN_GUILD:format(shortName(r.unknownPoster or "?"))
+end
+
+local function ageText(seconds)
+  local age = ns.Query.age(math.max(seconds, 0))
+  return age == "now" and L.SEEN_NOW or L.SEEN:format(age)
 end
 
 local function meta(r, now)
   local posters = r.posters == 1 and L.POSTERS_ONE or L.POSTERS_MANY:format(r.posters)
-  local age = ns.Query.age(math.max(now - (r.lastSeen or now), 0))
-  return posters .. " · " .. (age == "now" and L.SEEN_NOW or L.SEEN:format(age))
+  return posters .. " · " .. ageText(now - (r.lastSeen or now))
+end
+
+-- Opens a whisper to a poster in the chat edit box.
+function Window.Whisper(sender)
+  if ChatFrame_SendTell then
+    ChatFrame_SendTell(sender)
+  elseif ChatFrameUtil and ChatFrameUtil.SendTell then
+    ChatFrameUtil.SendTell(sender)
+  elseif ChatFrame_OpenChat then
+    ChatFrame_OpenChat("/w " .. sender .. " ")
+  end
+end
+
+-- One widget of the expanded part: a poster header or one of their messages.
+local function detailLine(row, index)
+  local line = row.detailLines[index]
+  if line then return line end
+  line = CreateFrame("Frame", nil, row)
+  line.text = line:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  line.text:SetPoint("TOPLEFT", 0, 0)
+  line.text:SetPoint("RIGHT", line, "RIGHT", -84, 0)
+  line.text:SetJustifyH("LEFT")
+  line.whisper = CreateFrame("Button", nil, line, "UIPanelButtonTemplate")
+  line.whisper:SetSize(76, 18)
+  line.whisper:SetPoint("TOPRIGHT", 0, 2)
+  line.whisper:SetText(L.WHISPER)
+  line.whisper:SetScript("OnClick", function(self) Window.Whisper(self.sender) end)
+  row.detailLines[index] = line
+  return line
+end
+
+-- Lays out every poster and their messages below the row; returns the height.
+local function fillDetails(row, r, now, width)
+  local used, y = 0, ROW_HEIGHT
+  for _, poster in ipairs(ns.Store.posters(r.entry)) do
+    used = used + 1
+    local header = detailLine(row, used)
+    header:ClearAllPoints()
+    header:SetPoint("TOPLEFT", row, "TOPLEFT", 14, -y)
+    header:SetSize(width - 20, 18)
+    header.text:SetText(L.POSTER_LINE:format(shortName(poster.sender), poster.messages[1].channel or "",
+      ageText(now - poster.lastSeen)))
+    header.text:SetFontObject("GameFontNormalSmall")
+    header.whisper.sender = poster.sender
+    header.whisper:Show()
+    header:Show()
+    y = y + 20
+    for _, m in ipairs(poster.messages) do
+      used = used + 1
+      local line = detailLine(row, used)
+      line:ClearAllPoints()
+      line:SetPoint("TOPLEFT", row, "TOPLEFT", 24, -y)
+      line.text:SetFontObject("GameFontHighlightSmall")
+      line.text:SetWidth(width - 34)
+      line.text:SetWordWrap(true)
+      line.text:SetText(m.count > 1 and (m.text .. "  " .. L.REPEATS:format(m.count)) or m.text)
+      local height = math.max((line.text:GetStringHeight() or 0) + 4, 14)
+      line:SetSize(width - 34, height)
+      line.whisper:Hide()
+      line:Show()
+      y = y + height
+    end
+    y = y + 4
+  end
+  for i = used + 1, #row.detailLines do row.detailLines[i]:Hide() end
+  return y + 2
 end
 
 function Window.Refresh()
   if not frame or not frame:IsShown() then return end
   local now = time()
   local list = ns.Query.list(ns.db, { now = now })
+  local width = content:GetWidth()
   local y = 0
   for i, r in ipairs(list) do
     local row = rows[i] or newRow()
@@ -91,8 +178,17 @@ function Window.Refresh()
     row.nameText:SetText(Window.DisplayName(r))
     row.metaText:SetText(meta(r, now))
     row.messageText:SetText(r.message)
+    local height = ROW_HEIGHT
+    if expanded[r.id] then
+      row.messageText:Hide()
+      height = fillDetails(row, r, now, width)
+    else
+      row.messageText:Show()
+      for _, line in ipairs(row.detailLines) do line:Hide() end
+    end
+    row:SetHeight(height)
     row:Show()
-    y = y + ROW_HEIGHT + ROW_GAP
+    y = y + height + ROW_GAP
   end
   for i = #list + 1, #rows do rows[i]:Hide() end
   content:SetHeight(math.max(y, 1))

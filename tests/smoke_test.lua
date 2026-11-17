@@ -111,6 +111,8 @@ _G.UnitName = function() return "Me" end
 _G.GetNormalizedRealmName = function() return "Realm" end
 _G.GetGuildInfo = function() return "My Guild" end
 _G.date = os.date
+local whispered
+_G.ChatFrame_SendTell = function(name) whispered = name end
 local clock = 1763100000
 _G.time = function() return clock end
 
@@ -185,6 +187,23 @@ clock = clock + 3 * 3600
 slash("WHOSHIRING", "")
 slash("WHOSHIRING", "")
 check("ages update when reopened", shownTexts():find("seen 3h ago", 1, true) ~= nil, shownTexts())
+
+chat("CHAT_MSG_CHANNEL", "<Night Watch> recruiting healers, raids wed/thu", "Alice-Realm", "4. LookingForGroup", "LookingForGroup")
+chat("CHAT_MSG_CHANNEL", "<Night Watch> recruiting healers, raids wed/thu", "Alice-Realm", "4. LookingForGroup", "LookingForGroup")
+local nightRow = find(function(w) return rawget(w, "data") and w.data.name == "Night Watch" and visible(w) end)
+check("the Night Watch row exists", nightRow ~= nil)
+check("a closed row hides the poster lines", not shownTexts():find("Alice · LookingForGroup", 1, true), shownTexts())
+nightRow.scripts.OnClick(nightRow)
+texts = shownTexts()
+check("an opened row lists every poster", texts:find("Alice · LookingForGroup", 1, true) ~= nil
+  and texts:find("Bob · Trade - City", 1, true) ~= nil, texts)
+check("an opened row shows repeats once with a count", texts:find("raids wed/thu  (x2)", 1, true) ~= nil, texts)
+local whisperButton = find(function(w) return rawget(w, "sender") == "Alice-Realm" and visible(w) end)
+check("each poster has a whisper button", whisperButton ~= nil)
+if whisperButton then whisperButton.scripts.OnClick(whisperButton) end
+check("the whisper button whispers the poster", whispered == "Alice-Realm", tostring(whispered))
+nightRow.scripts.OnClick(nightRow)
+check("clicking again closes the row", not shownTexts():find("Alice · LookingForGroup", 1, true), shownTexts())
 
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
