@@ -15,6 +15,7 @@ Core\Store.lua
 Core\Query.lua
 Core\Alert.lua
 Core\Geometry.lua
+Game\Skin.lua
 Game\Report.lua
 Game\Main.lua
 Game\Filters.lua

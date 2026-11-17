@@ -9,7 +9,7 @@ ns.Window = Window
 local WIDTH, HEIGHT = 560, 520
 local MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT = 400, 260, 1400, 1200
 local ROW_HEIGHT, ROW_GAP = 56, 4
-local SCROLL_INSET = 44 -- frame width minus the scroll child's width
+local SCROLL_INSET = 34 -- frame width minus the scroll child's width
 local FRAME_NAME = "WhosHiringFrame"
 
 local frame, content, emptyText, scroll, firstTab
@@ -78,10 +78,10 @@ local function newRow()
 
   local bg = row:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints()
-  bg:SetColorTexture(1, 1, 1, 0.04)
+  bg:SetColorTexture(1, 0.9, 0.7, 0.035)
   local highlight = row:CreateTexture(nil, "HIGHLIGHT")
   highlight:SetAllPoints()
-  highlight:SetColorTexture(1, 1, 1, 0.08)
+  highlight:SetColorTexture(ns.Skin.accent[1], ns.Skin.accent[2], ns.Skin.accent[3], 0.08)
 
   row.nameText = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
   row.nameText:SetPoint("TOPLEFT", 6, -4)
@@ -105,7 +105,7 @@ local function newRow()
       Window.Refresh()
     end
   end)
-  row.restoreButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+  row.restoreButton = ns.Skin.Button(CreateFrame("Button", nil, row))
   row.restoreButton:SetSize(76, 20)
   row.restoreButton:SetPoint("TOPRIGHT", -6, -3)
   row.restoreButton:SetText(L.RESTORE)
@@ -144,7 +144,7 @@ local function newRow()
   row.detailLines = {} -- reused widgets of the expanded part
 
   -- Opens the Who window on this guild's online members (shown when open).
-  row.whoButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+  row.whoButton = ns.Skin.Button(CreateFrame("Button", nil, row))
   row.whoButton:SetSize(120, 20)
   row.whoButton:SetText(L.WHO_ONLINE)
   row.whoButton:SetScript("OnClick", function()
@@ -296,7 +296,7 @@ local function detailLine(row, index)
   -- a small meta line; poster headers and online lines leave them hidden.
   line.bg = line:CreateTexture(nil, "BACKGROUND")
   line.bg:SetAllPoints()
-  line.bg:SetColorTexture(1, 1, 1, 0.05)
+  line.bg:SetColorTexture(1, 0.9, 0.7, 0.045)
   line.accent = line:CreateTexture(nil, "ARTWORK")
   line.accent:SetPoint("TOPLEFT", 0, 0)
   line.accent:SetPoint("BOTTOMLEFT", 0, 0)
@@ -308,7 +308,7 @@ local function detailLine(row, index)
   line.text:SetPoint("TOPLEFT", 0, 0)
   line.text:SetPoint("RIGHT", line, "RIGHT", -84, 0)
   line.text:SetJustifyH("LEFT")
-  line.whisper = CreateFrame("Button", nil, line, "UIPanelButtonTemplate")
+  line.whisper = ns.Skin.Button(CreateFrame("Button", nil, line))
   line.whisper:SetSize(76, 18)
   line.whisper:SetPoint("TOPRIGHT", 0, 2)
   line.whisper:SetText(L.WHISPER)
@@ -442,7 +442,7 @@ local TOP_FIXED = 82
 local function placeScroll(chipHeight)
   scroll:ClearAllPoints()
   scroll:SetPoint("TOPLEFT", 12, -(TOP_FIXED + (chipHeight > 0 and chipHeight + 4 or 0)))
-  scroll:SetPoint("BOTTOMRIGHT", -32, 24)
+  scroll:SetPoint("BOTTOMRIGHT", -22, 24)
 end
 
 function Window.Refresh()
@@ -453,7 +453,7 @@ function Window.Refresh()
   options.now, options.tab = now, currentTab
   local list = ns.Query.list(ns.db, options)
   for tab, button in pairs(tabButtons) do
-    if tab == currentTab then button:LockHighlight() else button:UnlockHighlight() end
+    ns.Skin.SetSelected(button, tab == currentTab)
   end
   local width = content:GetWidth()
   local y = 0
@@ -495,7 +495,7 @@ function Window.Refresh()
 end
 
 local function build()
-  frame = CreateFrame("Frame", FRAME_NAME, UIParent, "BasicFrameTemplateWithInset")
+  frame = ns.Skin.Window(CreateFrame("Frame", FRAME_NAME, UIParent))
   frame:SetFrameStrata("HIGH")
   frame:SetMovable(true)
   frame:SetResizable(true)
@@ -514,11 +514,8 @@ local function build()
 
   -- Drag the bottom-right corner to resize.
   local grip = CreateFrame("Button", nil, frame)
-  grip:SetSize(16, 16)
-  grip:SetPoint("BOTTOMRIGHT", -4, 4)
-  grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-  grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-  grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+  ns.Skin.Grip(grip)
+  grip:SetPoint("BOTTOMRIGHT", -3, 3)
   grip:SetScript("OnMouseDown", function()
     -- Anchored by its centre, the window would grow on both sides at once.
     local left, top = frame:GetLeft(), frame:GetTop()
@@ -535,10 +532,11 @@ local function build()
   end)
 
   scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+  ns.Skin.ScrollBar(scroll)
   -- Tabs: All, Starred, Dismissed.
   local previous
   for _, tab in ipairs({ { "all", L.TAB_ALL }, { "starred", L.TAB_STARRED }, { "dismissed", L.TAB_DISMISSED } }) do
-    local b = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local b = ns.Skin.Button(CreateFrame("Button", nil, frame))
     b:SetSize(84, 20)
     if previous then b:SetPoint("LEFT", previous, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 12, -30) end
     b:SetText(tab[2])

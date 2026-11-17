@@ -20,7 +20,7 @@ local function dayBox(panel, anchor, settingKey, label, helpText, min, max)
   local text = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
   text:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -16)
   text:SetText(label)
-  local box = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
+  local box = ns.Skin.Input(CreateFrame("EditBox", nil, panel))
   box:SetSize(50, 20)
   box:SetPoint("LEFT", text, "RIGHT", 12, 0)
   box:SetAutoFocus(false)
@@ -43,7 +43,7 @@ end
 
 -- A checkbox; `get`/`set` read and write the setting.
 local function checkbox(panel, anchor, label, helpText, get, set)
-  local check = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+  local check = ns.Skin.Check(CreateFrame("CheckButton", nil, panel))
   check:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -4, -10)
   if type(check.Text) == "table" then check.Text:SetText(label) end
   check:SetScript("OnClick", function(self) set(self:GetChecked() and true or false) end)

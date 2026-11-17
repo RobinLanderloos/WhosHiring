@@ -48,8 +48,16 @@ end
 
 local function paintChip(button)
   local on = ui().chips[button.tagId] == true
-  button.bg:SetColorTexture(on and 0.25 or 1, on and 0.55 or 1, on and 1 or 1, on and 0.55 or 0.08)
-  button.text:SetTextColor(on and 1 or 0.8, on and 1 or 0.8, on and 1 or 0.8)
+  local a, c = ns.Skin.accent, ns.Skin.colors
+  if on then
+    button.bg:SetColorTexture(a[1] * 0.35, a[2] * 0.35, a[3] * 0.35, 1)
+    for _, t in ipairs(button.edges) do t:SetColorTexture(a[1], a[2], a[3], 1) end
+    button.text:SetTextColor(1, 1, 1)
+  else
+    button.bg:SetColorTexture(c.button[1], c.button[2], c.button[3], 1)
+    for _, t in ipairs(button.edges) do t:SetColorTexture(c.border[1], c.border[2], c.border[3], 1) end
+    button.text:SetTextColor(0.8, 0.77, 0.7)
+  end
 end
 
 -- "Raiding + Healer" for the saved alert chips, in definition order.
@@ -83,7 +91,8 @@ local function newChip(def)
   button.bg:SetAllPoints()
   local highlight = button:CreateTexture(nil, "HIGHLIGHT")
   highlight:SetAllPoints()
-  highlight:SetColorTexture(1, 1, 1, 0.12)
+  highlight:SetColorTexture(ns.Skin.accent[1], ns.Skin.accent[2], ns.Skin.accent[3], 0.15)
+  button.edges = ns.Skin.Edges(button, "BORDER", ns.Skin.colors.border)
   button.text = button:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
   button.text:SetPoint("CENTER")
   button.text:SetText(def.label)
@@ -136,7 +145,7 @@ function Filters.Build(frame, anchor)
   toolbar:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -4)
   toolbar:SetPoint("RIGHT", frame, "RIGHT", -12, 0)
 
-  toggleButton = CreateFrame("Button", nil, toolbar, "UIPanelButtonTemplate")
+  toggleButton = ns.Skin.Button(CreateFrame("Button", nil, toolbar))
   toggleButton:SetSize(96, 20)
   toggleButton:SetPoint("LEFT", 0, 0)
   toggleButton:SetScript("OnClick", function()
@@ -145,7 +154,7 @@ function Filters.Build(frame, anchor)
     refresh()
   end)
 
-  sortButton = CreateFrame("Button", nil, toolbar, "UIPanelButtonTemplate")
+  sortButton = ns.Skin.Button(CreateFrame("Button", nil, toolbar))
   sortButton:SetSize(120, 20)
   sortButton:SetPoint("LEFT", toggleButton, "RIGHT", 4, 0)
   sortButton:SetScript("OnClick", function()
@@ -157,7 +166,7 @@ function Filters.Build(frame, anchor)
     refresh()
   end)
 
-  clearButton = CreateFrame("Button", nil, toolbar, "UIPanelButtonTemplate")
+  clearButton = ns.Skin.Button(CreateFrame("Button", nil, toolbar))
   clearButton:SetSize(60, 20)
   clearButton:SetPoint("LEFT", sortButton, "RIGHT", 4, 0)
   clearButton:SetText(L.CLEAR)
@@ -169,7 +178,7 @@ function Filters.Build(frame, anchor)
     refresh()
   end)
 
-  searchBox = CreateFrame("EditBox", nil, toolbar, "InputBoxTemplate")
+  searchBox = ns.Skin.Input(CreateFrame("EditBox", nil, toolbar))
   searchBox:SetSize(150, 20)
   searchBox:SetPoint("RIGHT", toolbar, "RIGHT", -4, 0)
   searchBox:SetAutoFocus(false)
@@ -190,13 +199,14 @@ function Filters.Build(frame, anchor)
   panel:SetPoint("RIGHT", frame, "RIGHT", -12, 0)
   for _, group in ipairs(ns.Tags.groups) do
     local label = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    label:SetTextColor(unpack(ns.Skin.accent))
     label:SetText(group.label)
     labels[group.id] = label
   end
   for _, def in ipairs(ns.Tags.definitions) do chips[def.id] = newChip(def) end
 
   -- Saves the selected chips as the alert filter (or clears it with none).
-  alertButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  alertButton = ns.Skin.Button(CreateFrame("Button", nil, panel))
   alertButton:SetSize(170, 20)
   alertButton:SetScript("OnClick", function()
     ns.Alert.save(ns.db, ui().chips, time())
