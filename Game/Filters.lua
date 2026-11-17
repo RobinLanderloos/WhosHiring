@@ -10,7 +10,7 @@ ns.Filters = Filters
 local CHIP_HEIGHT, CHIP_GAP, LABEL_WIDTH = 18, 4, 70
 local SORTS = { "seen", "name", "posters" }
 
-local panel, toolbar, searchBox, sortButton, toggleButton, clearButton
+local panel, toolbar, searchBox, sortButton, toggleButton, clearButton, alertButton, alertText
 local chips = {}     -- tagId -> button
 local labels = {}    -- groupId -> font string
 local searchText = ""
@@ -52,6 +52,15 @@ local function paintChip(button)
   button.text:SetTextColor(on and 1 or 0.8, on and 1 or 0.8, on and 1 or 0.8)
 end
 
+-- "Raiding + Healer" for the saved alert chips, in definition order.
+local function alertSummary()
+  local parts = {}
+  for _, def in ipairs(ns.Tags.definitions) do
+    if ns.db.alert and ns.db.alert.chips and ns.db.alert.chips[def.id] then parts[#parts + 1] = def.label end
+  end
+  return #parts > 0 and table.concat(parts, " + ") or nil
+end
+
 function Filters.Update()
   if not toolbar then return end
   for _, button in pairs(chips) do paintChip(button) end
@@ -60,6 +69,10 @@ function Filters.Update()
   sortButton:SetText(L["SORT_" .. ui().sort:upper()] or L.SORT_SEEN)
   clearButton:SetShown(n > 0 or searchText ~= "")
   panel:SetShown(Filters.IsOpen())
+  local summary = alertSummary()
+  alertText:SetText(summary and L.ALERT_ON:format(summary) or L.ALERT_NONE)
+  alertButton:SetText(n > 0 and L.ALERT_SAVE or L.ALERT_CLEAR)
+  alertButton:SetEnabled(n > 0 or summary ~= nil)
 end
 
 local function newChip(def)
@@ -107,6 +120,10 @@ function Filters.Layout(width)
     end
     y = y + CHIP_HEIGHT + CHIP_GAP
   end
+  -- The saved-filter alert sits under the chips.
+  alertButton:ClearAllPoints()
+  alertButton:SetPoint("TOPLEFT", panel, "TOPLEFT", LABEL_WIDTH, -y - 2)
+  y = y + 26
   panel:SetHeight(y)
   return y
 end
@@ -177,6 +194,18 @@ function Filters.Build(frame, anchor)
     labels[group.id] = label
   end
   for _, def in ipairs(ns.Tags.definitions) do chips[def.id] = newChip(def) end
+
+  -- Saves the selected chips as the alert filter (or clears it with none).
+  alertButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  alertButton:SetSize(170, 20)
+  alertButton:SetScript("OnClick", function()
+    ns.Alert.save(ns.db, ui().chips, time())
+    Filters.Update()
+  end)
+  alertText = panel:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+  alertText:SetPoint("LEFT", alertButton, "RIGHT", 8, 0)
+  alertText:SetPoint("RIGHT", panel, "RIGHT", 0, 0)
+  alertText:SetJustifyH("LEFT")
 
   Filters.Update()
   return toolbar, panel

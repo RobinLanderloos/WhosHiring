@@ -144,3 +144,8 @@ function Query.age(seconds)
   if seconds < 86400 then return math.floor(seconds / 3600) .. "h" end
   return math.floor(seconds / 86400) .. "d"
 end
+
+-- True when an entry's tags satisfy the chips (OR within a group, AND across).
+function Query.matches(entry, chips)
+  return matchesChips({ tags = tagList(entry) }, chips)
+end

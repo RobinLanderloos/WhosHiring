@@ -126,7 +126,7 @@
       "id": "009",
       "title": "Saved-filter alert",
       "description": "'Alert me on this filter' saves the current chip selection. When a new or newly matching guild matches it, one clickable chat line (and an optional sound) appears, once per guild.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/009-saved-filter-alert.md",
       "acceptanceCriteria": [
         "Alert.shouldAlert fires once per guild for new matches (unit tests)",

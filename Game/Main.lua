@@ -88,4 +88,5 @@ function ns.OnRecorded(status, entry)
   if status == "ignored" or status == "dismissed" then return end
   if ns.Window then ns.Window.OnRecorded(status, entry) end
   if ns.MinimapButton then ns.MinimapButton.UpdateCount() end
+  if ns.Alerts then ns.Alerts.OnRecorded(entry) end
 end

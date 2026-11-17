@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,9 +12,9 @@ Open
 
 ## Acceptance criteria
 
-- [ ] Alert.shouldAlert fires once per guild for new matches (unit tests)
-- [ ] The chat line opens the window on that guild
-- [ ] Alerts and the sound can be turned off in settings
+- [x] Alert.shouldAlert fires once per guild for new matches (unit tests)
+- [x] The chat line opens the window on that guild
+- [x] Alerts and the sound can be turned off in settings
 
 ## Blocked by
 

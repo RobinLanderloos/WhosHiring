@@ -31,6 +31,9 @@ Detect.weakSignals = {
   "%f[%a]is looking for%f[%A]",
   "%f[%a]seeking%f[%A]",
   "%f[%a]are looking for%f[%A]",
+  "%f[%a]needs? %a* ?%a* ?tanks?%f[%A]",
+  "%f[%a]needs? %a* ?%a* ?heal",
+  "%f[%a]needs? %a* ?%a* ?dps%f[%A]",
 }
 
 -- What makes a weak signal count.

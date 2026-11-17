@@ -404,6 +404,14 @@ function Window.Toggle()
   if frame:IsShown() then frame:Hide() else frame:Show() end
 end
 
+-- Opens the list on the All tab with this guild's posters shown.
+function Window.ShowGuild(id)
+  if not frame then build() end
+  currentTab = "all"
+  expanded[id] = true
+  if frame:IsShown() then Window.Refresh() else frame:Show() end
+end
+
 function Window.IsShown()
   return frame ~= nil and frame:IsShown()
 end

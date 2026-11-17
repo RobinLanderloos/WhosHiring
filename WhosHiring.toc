@@ -20,5 +20,6 @@ Game\Main.lua
 Game\Filters.lua
 Game\Window.lua
 Game\MinimapButton.lua
+Game\Alerts.lua
 Game\Options.lua
 Game\Slash.lua

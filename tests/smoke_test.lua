@@ -111,6 +111,11 @@ _G.UnitName = function() return "Me" end
 _G.GetNormalizedRealmName = function() return "Realm" end
 _G.GetGuildInfo = function() return "My Guild" end
 _G.date = os.date
+local itemRefHooks = {}
+_G.SetItemRef = function() end
+_G.hooksecurefunc = function(name, fn) if name == "SetItemRef" then itemRefHooks[#itemRefHooks + 1] = fn end end
+local sounds = 0
+_G.PlaySound = function() sounds = sounds + 1 end
 _G.Minimap = newWidget()
 _G.GetCursorPosition = function() return 0, 0 end
 _G.wipe = function(t) for k in pairs(t) do t[k] = nil end return t end
@@ -343,6 +348,31 @@ check("/wh report is saved", type(WhosHiringDB.report) == "table" and table.conc
   WhosHiringDB.report and table.concat(WhosHiringDB.report, " / "))
 slash("WHOSHIRING", "debug")
 check("/wh debug again turns it off", WhosHiringDB.settings.debug == nil)
+
+-- Saved-filter alert
+toggleFilters.scripts.OnClick(toggleFilters)
+chip("healer").scripts.OnClick(chip("healer"))
+local alertButton = button("Alert me on these chips")
+check("the chip panel offers to save an alert", alertButton ~= nil, shownTexts())
+alertButton.scripts.OnClick(alertButton)
+check("the saved alert is described", shownTexts():find("Alert on new guilds with: Healer", 1, true) ~= nil, shownTexts())
+chip("healer").scripts.OnClick(chip("healer"))
+toggleFilters.scripts.OnClick(toggleFilters)
+slash("WHOSHIRING", "") -- close the list
+said = {}
+_G.print = function(text) said[#said + 1] = tostring(text) end
+chat("CHAT_MSG_CHANNEL", "<Mender Club> recruiting healers", "Doc-Realm", "2. Trade - City", "Trade - City")
+chat("CHAT_MSG_CHANNEL", "<Mender Club> recruiting healers, apply now", "Pat-Realm", "2. Trade - City", "Trade - City")
+chat("CHAT_MSG_CHANNEL", "<Tank Club> recruiting tanks", "Tim-Realm", "2. Trade - City", "Trade - City")
+_G.print = realPrint
+local alertLines = table.concat(said, " / ")
+check("a matching new guild is announced once", select(2, alertLines:gsub("Mender Club", "")) == 1, alertLines)
+check("a guild that does not match is not announced", alertLines:find("Tank Club", 1, true) == nil, alertLines)
+check("the alert plays a sound", sounds == 1, sounds)
+local linkCode = alertLines:match("|H(addon:whoshiring:%d+)|h")
+check("the alert line has a link", linkCode ~= nil, alertLines)
+for _, hook in ipairs(itemRefHooks) do hook(linkCode or "") end
+check("clicking the link opens the guild with its posters", shownTexts():find("Pat · Trade - City", 1, true) ~= nil, shownTexts())
 
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
