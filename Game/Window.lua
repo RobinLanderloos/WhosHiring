@@ -12,7 +12,7 @@ local ROW_HEIGHT, ROW_GAP = 56, 4
 local SCROLL_INSET = 44 -- frame width minus the scroll child's width
 local FRAME_NAME = "WhosHiringFrame"
 
-local frame, content, emptyText
+local frame, content, emptyText, scroll, firstTab
 local rows = {}
 local expanded = {} -- row id -> true while open (this session only)
 local currentTab = "all" -- "all", "starred" or "dismissed"
@@ -259,10 +259,21 @@ local function fillDetails(row, r, now, width)
   return y + 2
 end
 
+-- The list starts under the tabs, the toolbar and (when open) the chip panel.
+local TOP_FIXED = 82
+local function placeScroll(chipHeight)
+  scroll:ClearAllPoints()
+  scroll:SetPoint("TOPLEFT", 12, -(TOP_FIXED + (chipHeight > 0 and chipHeight + 4 or 0)))
+  scroll:SetPoint("BOTTOMRIGHT", -32, 24)
+end
+
 function Window.Refresh()
   if not frame or not frame:IsShown() then return end
   local now = time()
-  local list = ns.Query.list(ns.db, { now = now, tab = currentTab })
+  placeScroll(ns.Filters.Layout(frame:GetWidth() - 24))
+  local options = ns.Filters.Options()
+  options.now, options.tab = now, currentTab
+  local list = ns.Query.list(ns.db, options)
   for tab, button in pairs(tabButtons) do
     if tab == currentTab then button:LockHighlight() else button:UnlockHighlight() end
   end
@@ -299,7 +310,8 @@ function Window.Refresh()
   end
   for i = #list + 1, #rows do rows[i]:Hide() end
   content:SetHeight(math.max(y, 1))
-  emptyText:SetText(currentTab == "all" and L.NOTHING_YET or L.NOTHING_IN_TAB)
+  local filtered = next(options.chips) ~= nil or (options.search or ""):find("%S") ~= nil
+  emptyText:SetText(filtered and L.NOTHING_MATCHES or currentTab == "all" and L.NOTHING_YET or L.NOTHING_IN_TAB)
   emptyText:SetShown(#list == 0)
 end
 
@@ -343,7 +355,7 @@ local function build()
     Window.Refresh()
   end)
 
-  local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+  scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
   -- Tabs: All, Starred, Dismissed.
   local previous
   for _, tab in ipairs({ { "all", L.TAB_ALL }, { "starred", L.TAB_STARRED }, { "dismissed", L.TAB_DISMISSED } }) do
@@ -357,11 +369,12 @@ local function build()
       Window.Refresh()
     end)
     tabButtons[tab[1]] = b
+    firstTab = firstTab or b
     previous = b
   end
 
-  scroll:SetPoint("TOPLEFT", 12, -56)
-  scroll:SetPoint("BOTTOMRIGHT", -32, 24)
+  ns.Filters.Build(frame, firstTab)
+  placeScroll(0)
   content = CreateFrame("Frame", nil, scroll)
   content:SetSize(frame:GetWidth() - SCROLL_INSET, 1)
   scroll:SetScrollChild(content)

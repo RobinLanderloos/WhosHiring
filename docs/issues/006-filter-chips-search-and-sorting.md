@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,9 +12,9 @@ Chip rows built from the tag definitions filter the list: OR within a group, AND
 
 ## Acceptance criteria
 
-- [ ] Query.list implements OR within a group and AND across groups (unit tests)
-- [ ] Search matches names and message text, ignoring case (unit tests)
-- [ ] Chips and search box in the window update the list
+- [x] Query.list implements OR within a group and AND across groups (unit tests)
+- [x] Search matches names and message text, ignoring case (unit tests)
+- [x] Chips and search box in the window update the list
 
 ## Blocked by
 

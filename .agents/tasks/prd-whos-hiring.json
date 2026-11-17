@@ -80,7 +80,7 @@
       "id": "006",
       "title": "Filter chips, search and sorting",
       "description": "Chip rows built from the tag definitions filter the list: OR within a group, AND across groups. A search box matches guild names and message text. Sorting by last seen (default), name or poster count, always with starred first.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/006-filter-chips-search-and-sorting.md",
       "acceptanceCriteria": [
         "Query.list implements OR within a group and AND across groups (unit tests)",

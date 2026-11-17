@@ -111,6 +111,7 @@ _G.UnitName = function() return "Me" end
 _G.GetNormalizedRealmName = function() return "Realm" end
 _G.GetGuildInfo = function() return "My Guild" end
 _G.date = os.date
+_G.wipe = function(t) for k in pairs(t) do t[k] = nil end return t end
 local whispered
 _G.ChatFrame_SendTell = function(name) whispered = name end
 local clock = 1763100000
@@ -256,7 +257,7 @@ tab("all")
 check("restored guilds are back in the list", shownTexts():find("Ashen Order", 1, true) ~= nil, shownTexts())
 
 local boxes = {}
-for _, w in ipairs(widgets) do if w.scripts.OnEnterPressed then boxes[#boxes + 1] = w end end
+for _, w in ipairs(widgets) do if w.scripts.OnEditFocusLost then boxes[#boxes + 1] = w end end
 check("the settings panel has the two day boxes", #boxes == 2, #boxes)
 if boxes[1] then
   boxes[1]:SetText("30"); boxes[1].scripts.OnEnterPressed(boxes[1])
@@ -265,6 +266,44 @@ if boxes[1] then
   check("a bad day count is refused and the saved value shown", WhosHiringDB.settings.staleDays == 30
     and boxes[1]:GetText() == "30", boxes[1]:GetText())
 end
+
+local function button(label)
+  return find(function(w) return rawget(w, "text") == label and visible(w) and w.scripts.OnClick end)
+end
+local function chip(id)
+  return find(function(w) return rawget(w, "tagId") == id end)
+end
+local toggleFilters = button("Filters")
+check("the toolbar has a Filters button", toggleFilters ~= nil, shownTexts())
+check("the chip panel starts closed", not visible(chip("tank")))
+toggleFilters.scripts.OnClick(toggleFilters)
+check("the Filters button opens the chip panel", visible(chip("tank")))
+local tankChip = chip("tank")
+tankChip.scripts.OnClick(tankChip)
+texts = shownTexts()
+check("a chip filters the list", texts:find("Night Watch", 1, true) ~= nil and texts:find("Iron Oath", 1, true) == nil, texts)
+check("the Filters button counts selected chips", texts:find("Filters (1)", 1, true) ~= nil, texts)
+check("chip choices are saved", WhosHiringDB.ui.chips.tank == true)
+local clear = button("Clear")
+clear.scripts.OnClick(clear)
+check("Clear removes the filters", shownTexts():find("Iron Oath", 1, true) ~= nil, shownTexts())
+
+local searchBox = find(function(w) return w.scripts.OnTextChanged end)
+searchBox:SetText("all classes")
+searchBox.scripts.OnTextChanged(searchBox)
+texts = shownTexts()
+check("search filters by message text", texts:find("Iron Oath", 1, true) ~= nil and texts:find("Night Watch", 1, true) == nil, texts)
+searchBox:SetText("zzz nothing")
+searchBox.scripts.OnTextChanged(searchBox)
+check("an empty result explains the filters", shownTexts():find("No guilds match these filters", 1, true) ~= nil, shownTexts())
+searchBox:SetText("")
+searchBox.scripts.OnTextChanged(searchBox)
+
+local sort = button("Sort: last seen")
+check("the sort button shows the order", sort ~= nil, shownTexts())
+sort.scripts.OnClick(sort)
+check("the sort button cycles", button("Sort: name") ~= nil and WhosHiringDB.ui.sort == "name")
+toggleFilters.scripts.OnClick(toggleFilters)
 
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
