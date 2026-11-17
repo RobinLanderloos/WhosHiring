@@ -2,7 +2,7 @@
 ## Title: Who's Hiring?
 ## Notes: Keeps a list of guilds recruiting in chat, with tags, stars and a not-interested list.
 ## Author: Robin
-## Version: 0.1.0
+## Version: 0.1.1
 ## SavedVariables: WhosHiringDB
 ## IconTexture: Interface\Icons\INV_Misc_Note_02
 
