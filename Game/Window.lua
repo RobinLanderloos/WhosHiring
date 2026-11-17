@@ -267,7 +267,17 @@ function Window.WhoOnline(id, name)
 end
 
 -- Opens a whisper to a poster in the chat edit box.
+-- Same-realm players are whispered by name alone, as the chat window does;
+-- the realm ("-CAMWOWEU5Realm5PvE") stays only for other realms.
+function Window.WhisperTarget(sender)
+  if Ambiguate then return Ambiguate(sender, "none") end
+  local realm = GetNormalizedRealmName and GetNormalizedRealmName()
+  if realm and sender:sub(-(#realm + 1)) == "-" .. realm then return sender:sub(1, -(#realm + 2)) end
+  return sender
+end
+
 function Window.Whisper(sender)
+  sender = Window.WhisperTarget(sender)
   if ChatFrame_SendTell then
     ChatFrame_SendTell(sender)
   elseif ChatFrameUtil and ChatFrameUtil.SendTell then

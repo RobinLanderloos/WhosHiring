@@ -221,7 +221,7 @@ check("an opened row shows repeats once with a count", texts:find("raids wed/thu
 local whisperButton = find(function(w) return rawget(w, "sender") == "Alice-Realm" and visible(w) end)
 check("each poster has a whisper button", whisperButton ~= nil)
 if whisperButton then whisperButton.scripts.OnClick(whisperButton) end
-check("the whisper button whispers the poster", whispered == "Alice-Realm", tostring(whispered))
+check("the whisper button whispers a same-realm poster by name only", whispered == "Alice", tostring(whispered))
 nightRow.scripts.OnClick(nightRow)
 check("clicking again closes the row", not shownTexts():find("Alice · LookingForGroup", 1, true), shownTexts())
 
