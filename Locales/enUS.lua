@@ -27,5 +27,9 @@ ns.L = {
   SEEN = "seen %s ago",
   SEEN_NOW = "seen just now",
   LOADED = "loaded. Type /wh to open the list.",
-  HELP = "/wh: open the list. /wh debug: log near misses. /wh report: write a report.",
+  HELP = "/wh: open the list. /wh config: settings. /wh debug: log near misses. /wh report: write a report.",
+  OPTION_STALE = "Grey out guilds not seen for (days)",
+  OPTION_STALE_HELP = "Guilds that have not posted for this many days are shown faded.",
+  OPTION_PRUNE = "Forget guilds not seen for (days)",
+  OPTION_PRUNE_HELP = "At login, guilds that have not posted for this many days are removed. Starred guilds and your Not interested list are always kept.",
 }

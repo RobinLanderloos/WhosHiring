@@ -95,7 +95,7 @@
       "id": "007",
       "title": "Retention: message cap, stale and prune",
       "description": "Each guild keeps at most 20 distinct messages. Guilds not seen for staleDays are greyed out, and after pruneDays they are removed at login unless starred. Dismissed records are never pruned. A settings panel exposes the day limits.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/007-retention-message-cap-stale-and-prune.md",
       "acceptanceCriteria": [
         "The message cap keeps the newest messages (unit test)",

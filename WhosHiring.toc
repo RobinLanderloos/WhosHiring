@@ -17,4 +17,5 @@ Core\Alert.lua
 Game\Report.lua
 Game\Main.lua
 Game\Window.lua
+Game\Options.lua
 Game\Slash.lua

@@ -293,6 +293,7 @@ function Window.Refresh()
       for _, line in ipairs(row.detailLines) do line:Hide() end
     end
     row:SetHeight(height)
+    row:SetAlpha(r.stale and 0.5 or 1) -- not seen for a while
     row:Show()
     y = y + height + ROW_GAP
   end

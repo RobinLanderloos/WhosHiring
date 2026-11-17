@@ -7,6 +7,9 @@ ns.Store = Store
 
 local function id(realm, key) return realm .. "|" .. key end
 
+-- Retention limits (ADR 0004); all of them are settings.
+Store.defaults = { staleDays = 14, pruneDays = 60, maxMessages = 20 }
+
 -- Fills in a missing or partial saved table and returns it.
 function Store.init(db)
   db = type(db) == "table" and db or {}
@@ -15,6 +18,10 @@ function Store.init(db)
   db.posters = db.posters or {} -- sender -> guild key, once a sender named a guild
   db.dismissed = db.dismissed or {} -- id -> small record (ADR 0003)
   db.dismissedPosters = db.dismissedPosters or {} -- sender -> time
+  db.settings = type(db.settings) == "table" and db.settings or {}
+  for k, v in pairs(Store.defaults) do
+    if db.settings[k] == nil then db.settings[k] = v end
+  end
   return db
 end
 
@@ -36,6 +43,14 @@ local function mergeUnknown(db, entry, sender)
   table.sort(entry.messages, function(a, b) return a.first < b.first end)
   entry.firstSeen = math.min(entry.firstSeen, unknown.firstSeen)
   db.guilds[unknownId] = nil
+end
+
+-- Drops the oldest messages beyond the cap.
+local function cap(entry, max)
+  if #entry.messages <= max then return end
+  table.sort(entry.messages, function(a, b) return a.last > b.last end)
+  for i = #entry.messages, max + 1, -1 do table.remove(entry.messages, i) end
+  table.sort(entry.messages, function(a, b) return a.first < b.first end)
 end
 
 -- A repeat of the same text by the same poster only counts (spam macros).
@@ -96,6 +111,7 @@ function Store.record(db, message)
   end
   entry.lastSeen = math.max(entry.lastSeen or message.time, message.time)
   addMessage(entry, message)
+  cap(entry, db.settings.maxMessages)
   Store.retag(entry)
   return status, entry, verdict
 end
@@ -136,6 +152,24 @@ function Store.hasDismissedPoster(db, entry)
     if db.dismissedPosters[m.sender] then return true end
   end
   return false
+end
+
+-- Removes guilds not seen for pruneDays, except starred ones. Dismissed
+-- records stay forever. Returns how many guilds were removed.
+function Store.prune(db, now)
+  local limit = now - db.settings.pruneDays * 86400
+  local removed = 0
+  for eid, entry in pairs(db.guilds) do
+    if not entry.starred and (entry.lastSeen or 0) < limit then
+      db.guilds[eid] = nil
+      removed = removed + 1
+    end
+  end
+  for sender, key in pairs(db.posters) do
+    local realm = sender:match("%-(.+)$") or ""
+    if not db.guilds[id(realm, key)] and not db.dismissed[id(realm, key)] then db.posters[sender] = nil end
+  end
+  return removed
 end
 
 function Store.star(entry, on)
@@ -190,4 +224,10 @@ function Store.posters(entry)
     return a.sender < b.sender
   end)
   return list
+end
+
+-- A day count typed in the settings, or nil when it is not a whole number in range.
+function Store.parseDays(text, min, max)
+  local n = tonumber(((text or ""):match("^%s*(%d+)%s*$")))
+  if n and n >= min and n <= max then return n end
 end

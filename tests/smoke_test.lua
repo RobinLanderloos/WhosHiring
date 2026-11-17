@@ -255,6 +255,17 @@ check("restored guilds leave the Dismissed tab", shownTexts():find("Ashen Order"
 tab("all")
 check("restored guilds are back in the list", shownTexts():find("Ashen Order", 1, true) ~= nil, shownTexts())
 
+local boxes = {}
+for _, w in ipairs(widgets) do if w.scripts.OnEnterPressed then boxes[#boxes + 1] = w end end
+check("the settings panel has the two day boxes", #boxes == 2, #boxes)
+if boxes[1] then
+  boxes[1]:SetText("30"); boxes[1].scripts.OnEnterPressed(boxes[1])
+  check("typing a day count saves it", WhosHiringDB.settings.staleDays == 30, WhosHiringDB.settings.staleDays)
+  boxes[1]:SetText("abc"); boxes[1].scripts.OnEnterPressed(boxes[1])
+  check("a bad day count is refused and the saved value shown", WhosHiringDB.settings.staleDays == 30
+    and boxes[1]:GetText() == "30", boxes[1]:GetText())
+end
+
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
 

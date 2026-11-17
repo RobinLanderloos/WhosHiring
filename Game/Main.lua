@@ -68,6 +68,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
     if ... ~= addonName then return end
     WhosHiringDB = ns.Store.init(WhosHiringDB)
     ns.db = WhosHiringDB
+    ns.Store.prune(ns.db, time()) -- ADR 0004
     for chatEvent in pairs(CHAT_EVENTS) do self:RegisterEvent(chatEvent) end
     self:UnregisterEvent("ADDON_LOADED")
     return

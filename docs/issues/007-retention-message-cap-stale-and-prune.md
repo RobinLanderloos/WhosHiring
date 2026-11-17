@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,10 +12,10 @@ Each guild keeps at most 20 distinct messages. Guilds not seen for staleDays are
 
 ## Acceptance criteria
 
-- [ ] The message cap keeps the newest messages (unit test)
-- [ ] Prune removes old, unstarred guilds and keeps starred guilds and dismissed records (unit test)
-- [ ] Stale rows show greyed out with 'last seen Nd ago'
-- [ ] Settings panel changes staleDays and pruneDays
+- [x] The message cap keeps the newest messages (unit test)
+- [x] Prune removes old, unstarred guilds and keeps starred guilds and dismissed records (unit test)
+- [x] Stale rows show greyed out with 'last seen Nd ago'
+- [x] Settings panel changes staleDays and pruneDays
 
 ## Blocked by
 

@@ -194,3 +194,55 @@ test("starring marks an entry and can be undone", function()
   Store.star(entry, false)
   eq(entry.starred, nil, "unstarred")
 end)
+
+test("settings get their defaults and keep saved values", function()
+  local db = Store.init(nil)
+  eq(db.settings.staleDays, 14, "stale")
+  eq(db.settings.pruneDays, 60, "prune")
+  eq(db.settings.maxMessages, 20, "cap")
+  local saved = Store.init({ settings = { pruneDays = 90 } })
+  eq(saved.settings.pruneDays, 90, "saved kept")
+  eq(saved.settings.staleDays, 14, "missing filled in")
+end)
+
+test("a guild keeps only its newest messages up to the cap", function()
+  local db = Store.init(nil)
+  db.settings.maxMessages = 3
+  local entry
+  for i = 1, 5 do
+    _, entry = Store.record(db, msg("<Night Watch> is recruiting, message " .. i, "Bob-Realm", i * 10))
+  end
+  eq(#entry.messages, 3, "capped")
+  local texts = {}
+  for _, m in ipairs(entry.messages) do texts[#texts + 1] = m.text:match("%d$") end
+  table.sort(texts)
+  eq(table.concat(texts), "345", "newest kept")
+end)
+
+test("prune removes old unstarred guilds and keeps starred and dismissed", function()
+  local db = Store.init(nil)
+  local day = 86400
+  local _, old = Store.record(db, msg("<Old> is recruiting", "A-Realm", 0))
+  local _, starred = Store.record(db, msg("<Starred> is recruiting", "B-Realm", 0))
+  local _, gone = Store.record(db, msg("<Gone> is recruiting", "C-Realm", 0))
+  Store.record(db, msg("<Fresh> is recruiting", "D-Realm", 50 * day))
+  Store.star(starred, true)
+  Store.dismiss(db, gone, 1)
+  local removed = Store.prune(db, 61 * day)
+  eq(removed, 1, "removed count")
+  eq(Store.get(db, "Realm", "old"), nil, "old pruned")
+  eq(Store.get(db, "Realm", "starred") ~= nil, true, "starred kept")
+  eq(Store.get(db, "Realm", "fresh") ~= nil, true, "fresh kept")
+  eq(db.dismissed["Realm|gone"] ~= nil, true, "dismissed kept")
+  eq(db.posters["A-Realm"], nil, "poster link of a pruned guild forgotten")
+  eq(db.posters["C-Realm"], "gone", "poster link of a dismissed guild kept")
+end)
+
+test("day settings accept whole numbers in range only", function()
+  eq(Store.parseDays("30", 1, 365), 30, "plain")
+  eq(Store.parseDays(" 7 ", 1, 365), 7, "spaces")
+  eq(Store.parseDays("0", 1, 365), nil, "below range")
+  eq(Store.parseDays("1000", 1, 365), nil, "above range")
+  eq(Store.parseDays("abc", 1, 365), nil, "not a number")
+  eq(Store.parseDays("2.5", 1, 365), nil, "not whole")
+end)

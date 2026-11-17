@@ -14,7 +14,7 @@ local function tagList(entry)
   return list
 end
 
-local function row(db, entry)
+local function row(db, entry, staleBefore)
   local latest = ns.Store.latest(entry)
   return {
     id = entry.realm .. "|" .. entry.key,
@@ -27,6 +27,7 @@ local function row(db, entry)
     posters = ns.Store.posterCount(entry),
     lastSeen = entry.lastSeen,
     starred = entry.starred,
+    stale = staleBefore and (entry.lastSeen or 0) < staleBefore or nil,
     dismissedPosterHint = ns.Store.hasDismissedPoster(db, entry) or nil,
   }
 end
@@ -62,6 +63,8 @@ end
 function Query.list(db, options)
   options = options or {}
   local tab = options.tab or "all"
+  local staleDays = options.staleDays or (db.settings and db.settings.staleDays)
+  local staleBefore = options.now and staleDays and options.now - staleDays * 86400
   local rows = {}
   if tab == "dismissed" then
     for eid, record in pairs(db.dismissed) do rows[#rows + 1] = dismissedRow(eid, record) end
@@ -69,7 +72,7 @@ function Query.list(db, options)
     return rows
   end
   for _, entry in pairs(db.guilds) do
-    if tab ~= "starred" or entry.starred then rows[#rows + 1] = row(db, entry) end
+    if tab ~= "starred" or entry.starred then rows[#rows + 1] = row(db, entry, staleBefore) end
   end
   table.sort(rows, byStarThenNewest)
   return rows
