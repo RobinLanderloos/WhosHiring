@@ -49,16 +49,18 @@ local function fill(frame, layer, c, sublevel)
   return color(t, c)
 end
 
--- A 1px frame of four textures; returns them so callers can recolour.
-local function edges(frame, layer, c, alpha)
+-- A 1px frame of four textures around `around` (default: the frame itself);
+-- returns them so callers can recolour.
+local function edges(frame, layer, c, alpha, around)
+  around = around or frame
   local list = {}
   for i, spec in ipairs({
     { "TOPLEFT", "TOPRIGHT", true }, { "BOTTOMLEFT", "BOTTOMRIGHT", true },
     { "TOPLEFT", "BOTTOMLEFT", false }, { "TOPRIGHT", "BOTTOMRIGHT", false },
   }) do
     local t = frame:CreateTexture(nil, layer, nil, 7)
-    t:SetPoint(spec[1], frame, spec[1])
-    t:SetPoint(spec[2], frame, spec[2])
+    t:SetPoint(spec[1], around, spec[1])
+    t:SetPoint(spec[2], around, spec[2])
     if spec[3] then t:SetHeight(1) else t:SetWidth(1) end
     color(t, c, alpha)
     list[i] = t
@@ -207,14 +209,17 @@ end
 
 -- A flat tick box. Use on a CheckButton made without UICheckButtonTemplate;
 -- gives it .Text like the template had.
+--
+-- The box is drawn with the check button's own textures, never a child
+-- frame: a child frame draws above its parent and would hide the tick.
 function Skin.Check(cb, size)
   size = size or 24
   cb:SetSize(size, size)
-  local box = CreateFrame("Frame", nil, cb)
-  box:SetSize(14, 14)
+  local box = cb:CreateTexture(nil, "BACKGROUND")
+  box:SetSize(16, 16)
   box:SetPoint("CENTER")
-  fill(box, "BACKGROUND", C.input)
-  local border = edges(box, "BORDER", C.border)
+  color(box, C.input, 1)
+  local border = edges(cb, "BORDER", C.border, nil, box)
   local tick = cb:CreateTexture(nil, "ARTWORK")
   tick:SetPoint("TOPLEFT", box, "TOPLEFT", 3, -3)
   tick:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", -3, 3)
@@ -225,10 +230,18 @@ function Skin.Check(cb, size)
   color(disabledTick, C.muted, 0.6)
   cb:SetDisabledCheckedTexture(disabledTick)
   local hover = cb:CreateTexture(nil, "HIGHLIGHT")
-  hover:SetPoint("TOPLEFT", box, "TOPLEFT", 1, -1)
-  hover:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", -1, 1)
-  color(hover, accent, 0.25)
+  hover:SetAllPoints(box)
+  color(hover, accent, 0.2)
   cb.skinBox, cb.skinBorder = box, border
+
+  -- A ticked box also gets an accent border, by click or by SetChecked.
+  local function paint()
+    recolor(border, cb:GetChecked() and accent or C.border, 1)
+  end
+  -- PostClick, not OnClick: callers set OnClick, which would drop a hook.
+  cb:SetScript("PostClick", paint)
+  if hooksecurefunc then hooksecurefunc(cb, "SetChecked", paint) end
+  paint()
 
   local text = cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
   text:SetPoint("LEFT", cb, "RIGHT", 2, 0)
