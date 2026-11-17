@@ -95,3 +95,9 @@ end
 function GuildName.normalize(name)
   return (name:lower():gsub("%s+", " "):gsub("^ ", ""):gsub(" $", ""))
 end
+
+-- The /who search for a guild's online members, e.g. g-"Night Watch".
+function GuildName.whoQuery(name)
+  if not name or name == "" then return nil end
+  return 'g-"' .. name:gsub('"', "") .. '"'
+end

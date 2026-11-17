@@ -21,11 +21,11 @@ The user runs the addon live: chat events arrive with the expected arguments, /w
 
 1. **Restart the client fully** (the addon is new, so `/reload` is not enough), then log in.
 2. Type `/wh debug` (turns logging on), then stay in a city with Trade or General open for a while.
-3. Open the list with `/wh` or the minimap button: check rows, tags (hover over them), expanding a row, Whisper, star, dismiss, Restore, filters, search, sort.
+3. Open the list with `/wh` or the minimap button: check rows, tags (hover over them), expanding a row, Whisper, Who's online (opens the Who window on the guild), star, dismiss, Restore, filters, search, sort.
 4. Optional: open Filters, pick a chip, click "Alert me on these chips", and wait for a match in chat; click the link.
 5. Type `/wh report`, then `/reload`. Claude reads `WTF\Account\<account>\SavedVariables\WhosHiring.lua`: the report, the near-miss log, channel names, and the captured guilds, to tune the rules.
 
-Unverified client facts the report answers: `/wh` is not taken, which whisper function exists, sender name format, secret values in chat.
+Unverified client facts the report answers: `/wh` is not taken, which whisper function exists, whether the Who window search works, sender name format, secret values in chat.
 
 ## Blocked by
 

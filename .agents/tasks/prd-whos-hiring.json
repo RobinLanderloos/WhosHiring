@@ -176,6 +176,22 @@
         "009",
         "010"
       ]
+    },
+    {
+      "id": "012",
+      "title": "Who's online button",
+      "description": "An open guild row has a \"Who's online\" button that opens the game's Who window with /who g-\"<Guild Name>\", so another member can be whispered when the poster is offline. One search per click, run through the Who window's own search box and button (not automatic, so ADR 0001's reasons against /who do not apply). Unknown guilds have no button.",
+      "status": "completed",
+      "markdownFile": "docs/issues/012-who-s-online-button.md",
+      "acceptanceCriteria": [
+        "GuildName.whoQuery builds g-\"Name\" and drops quotes (unit test)",
+        "The button shows only on open rows of named guilds",
+        "Clicking opens the Who tab and runs the search (smoke test)",
+        "/wh report lists which Who functions exist in the client"
+      ],
+      "blockedBy": [
+        "003"
+      ]
     }
   ]
 }

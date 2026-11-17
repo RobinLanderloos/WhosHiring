@@ -31,6 +31,9 @@ local function report()
     tostring(ChatFrame_SendTell ~= nil), tostring(ChatFrameUtil ~= nil and ChatFrameUtil.SendTell ~= nil),
     tostring(ChatFrame_OpenChat ~= nil)))
   Report.Say("issecretvalue exists: " .. tostring(issecretvalue ~= nil))
+  Report.Say(("who: ToggleFriendsFrame %s, FRIENDS_TAB_WHO %s, WhoFrameEditBox %s, WhoFrameWhoButton %s, C_FriendList.SendWho %s"):format(
+    tostring(ToggleFriendsFrame ~= nil), tostring(FRIENDS_TAB_WHO), tostring(WhoFrameEditBox ~= nil),
+    tostring(WhoFrameWhoButton ~= nil), tostring(C_FriendList ~= nil and C_FriendList.SendWho ~= nil)))
   Report.Say("debug mode: " .. tostring(db.settings.debug == true))
   local log = db.debugLog
   if log then

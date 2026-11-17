@@ -111,6 +111,13 @@ _G.UnitName = function() return "Me" end
 _G.GetNormalizedRealmName = function() return "Realm" end
 _G.GetGuildInfo = function() return "My Guild" end
 _G.date = os.date
+local whoQuery
+_G.WhoFrameEditBox = newWidget()
+_G.WhoFrameWhoButton = newWidget()
+rawset(WhoFrameWhoButton, "Click", function() whoQuery = WhoFrameEditBox:GetText() end)
+local friendsTab
+_G.ToggleFriendsFrame = function(tab) friendsTab = tab end
+_G.FRIENDS_TAB_WHO = 2
 local itemRefHooks = {}
 _G.SetItemRef = function() end
 _G.hooksecurefunc = function(name, fn) if name == "SetItemRef" then itemRefHooks[#itemRefHooks + 1] = fn end end
@@ -374,6 +381,25 @@ local linkCode = alertLines:match("|H(addon:whoshiring:%d+)|h")
 check("the alert line has a link", linkCode ~= nil, alertLines)
 for _, hook in ipairs(itemRefHooks) do hook(linkCode or "") end
 check("clicking the link opens the guild with its posters", shownTexts():find("Pat · Trade - City", 1, true) ~= nil, shownTexts())
+
+-- Who's online
+nightRow = rowOf("Night Watch")
+nightRow.scripts.OnClick(nightRow)
+check("an open named guild has a Who's online button", visible(nightRow.whoButton))
+nightRow.whoButton.scripts.OnClick(nightRow.whoButton)
+check("the button opens the Who tab", friendsTab == 2, tostring(friendsTab))
+check("the button searches the guild's online members", whoQuery == 'g-"Night Watch"', tostring(whoQuery))
+nightRow.scripts.OnClick(nightRow)
+check("closing the row hides the Who button", not visible(nightRow.whoButton))
+chat("CHAT_MSG_CHANNEL", "We are recruiting! /w me", "Una-Realm", "2. Trade - City", "Trade - City")
+local unknownRow = find(function(w) return rawget(w, "data") and w.data.unknownPoster == "Una-Realm" and visible(w) end)
+if unknownRow then
+  unknownRow.scripts.OnClick(unknownRow)
+  check("an unknown guild has no Who button", not visible(unknownRow.whoButton))
+  unknownRow.scripts.OnClick(unknownRow)
+else
+  check("the unknown row exists", false, shownTexts())
+end
 
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)

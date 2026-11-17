@@ -142,6 +142,22 @@ local function newRow()
   row.messageText:SetWordWrap(false)
 
   row.detailLines = {} -- reused widgets of the expanded part
+
+  -- Opens the Who window on this guild's online members (shown when open).
+  row.whoButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+  row.whoButton:SetSize(120, 20)
+  row.whoButton:SetText(L.WHO_ONLINE)
+  row.whoButton:SetScript("OnClick", function()
+    if row.data and row.data.name then Window.WhoOnline(row.data.name) end
+  end)
+  row.whoButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(L.WHO_ONLINE)
+    GameTooltip:AddLine(L.WHO_ONLINE_HELP, 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  row.whoButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  row.whoButton:Hide()
   row:RegisterForClicks("LeftButtonUp")
   row:SetScript("OnClick", toggle)
   return row
@@ -193,6 +209,22 @@ function Window.ShowTagTooltip(owner, r)
   GameTooltip:Show()
 end
 
+-- Runs /who g-"Name" through the game's own Who window, the same path as
+-- typing it there, so the click counts as the player's own search.
+function Window.WhoOnline(name)
+  local query = ns.GuildName.whoQuery(name)
+  if not query then return end
+  if ToggleFriendsFrame and not (WhoFrame and WhoFrame:IsVisible()) then
+    ToggleFriendsFrame(FRIENDS_TAB_WHO or 2)
+  end
+  if WhoFrameEditBox and WhoFrameWhoButton then
+    WhoFrameEditBox:SetText(query)
+    WhoFrameWhoButton:Click()
+  elseif C_FriendList and C_FriendList.SendWho then
+    C_FriendList.SendWho(query)
+  end
+end
+
 -- Opens a whisper to a poster in the chat edit box.
 function Window.Whisper(sender)
   if ChatFrame_SendTell then
@@ -225,6 +257,14 @@ end
 -- Lays out every poster and their messages below the row; returns the height.
 local function fillDetails(row, r, now, width)
   local used, y = 0, ROW_HEIGHT - 14 -- the message line is hidden when open
+  if r.name then
+    row.whoButton:ClearAllPoints()
+    row.whoButton:SetPoint("TOPLEFT", row, "TOPLEFT", 14, -y)
+    row.whoButton:Show()
+    y = y + 24
+  else
+    row.whoButton:Hide() -- an unknown guild has no name to search
+  end
   for _, poster in ipairs(ns.Store.posters(r.entry)) do
     used = used + 1
     local header = detailLine(row, used)
@@ -302,6 +342,7 @@ function Window.Refresh()
     else
       row.messageText:Show()
       for _, line in ipairs(row.detailLines) do line:Hide() end
+      row.whoButton:Hide()
     end
     row:SetHeight(height)
     row:SetAlpha(r.stale and 0.5 or 1) -- not seen for a while
