@@ -19,7 +19,7 @@
       "id": "002",
       "title": "Tags on guild entries",
       "description": "Keyword rules assign tags in the groups Focus, Intensity, Wants, Schedule, Language/Region and Other. A guild's tags are the union over all its messages and remember the trigger word. Rows show the tags, and hovering over a tag shows which word set it.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/002-tags-on-guild-entries.md",
       "acceptanceCriteria": [
         "Tags.extract covers every tag group, including class plurals and 'all classes' (unit tests)",

@@ -8,7 +8,7 @@ ns.Window = Window
 
 local WIDTH, HEIGHT = 560, 520
 local MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT = 400, 260, 1400, 1200
-local ROW_HEIGHT, ROW_GAP = 40, 4
+local ROW_HEIGHT, ROW_GAP = 56, 4
 local SCROLL_INSET = 44 -- frame width minus the scroll child's width
 local FRAME_NAME = "WhosHiringFrame"
 
@@ -42,6 +42,15 @@ local function restoreLayout()
   end
 end
 
+-- Clicking a row opens or closes its poster list.
+local function toggle(row)
+  local key = row.data and row.data.id
+  if key then
+    expanded[key] = not expanded[key] or nil
+    Window.Refresh()
+  end
+end
+
 local function newRow()
   local row = CreateFrame("Button", nil, content)
   row:SetHeight(ROW_HEIGHT)
@@ -62,21 +71,29 @@ local function newRow()
   row.metaText:SetJustifyH("RIGHT")
   row.nameText:SetPoint("RIGHT", row.metaText, "LEFT", -8, 0)
 
+  -- Tags, coloured by group; hovering explains which word set each one.
+  row.tagText = row:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+  row.tagText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -3)
+  row.tagText:SetPoint("RIGHT", -6, 0)
+  row.tagText:SetJustifyH("LEFT")
+  row.tagText:SetWordWrap(false)
+  row.tagHit = CreateFrame("Frame", nil, row)
+  row.tagHit:SetPoint("TOPLEFT", row.tagText, "TOPLEFT")
+  row.tagHit:SetPoint("BOTTOMRIGHT", row.tagText, "BOTTOMRIGHT")
+  row.tagHit:EnableMouse(true)
+  row.tagHit:SetScript("OnEnter", function(self) Window.ShowTagTooltip(self, row.data) end)
+  row.tagHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  row.tagHit:SetScript("OnMouseUp", function() toggle(row) end)
+
   row.messageText = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-  row.messageText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -4)
+  row.messageText:SetPoint("TOPLEFT", row.tagText, "BOTTOMLEFT", 0, -3)
   row.messageText:SetPoint("RIGHT", -6, 0)
   row.messageText:SetJustifyH("LEFT")
   row.messageText:SetWordWrap(false)
 
   row.detailLines = {} -- reused widgets of the expanded part
   row:RegisterForClicks("LeftButtonUp")
-  row:SetScript("OnClick", function(self)
-    local key = self.data and self.data.id
-    if key then
-      expanded[key] = not expanded[key] or nil
-      Window.Refresh()
-    end
-  end)
+  row:SetScript("OnClick", toggle)
   return row
 end
 
@@ -94,6 +111,30 @@ end
 local function meta(r, now)
   local posters = r.posters == 1 and L.POSTERS_ONE or L.POSTERS_MANY:format(r.posters)
   return posters .. " · " .. ageText(now - (r.lastSeen or now))
+end
+
+-- Colour per tag group, so the line reads at a glance.
+local GROUP_COLORS = {
+  focus = "ffd100", intensity = "ff8040", wants = "40c0ff",
+  schedule = "a0e080", language = "d0a0ff", other = "c0c0c0",
+}
+
+function Window.TagLine(tags)
+  local parts = {}
+  for _, t in ipairs(tags) do
+    parts[#parts + 1] = "|cff" .. (GROUP_COLORS[t.group] or "ffffff") .. t.label .. "|r"
+  end
+  return table.concat(parts, "  ")
+end
+
+function Window.ShowTagTooltip(owner, r)
+  if not r or #r.tags == 0 then return end
+  GameTooltip:SetOwner(owner, "ANCHOR_TOPLEFT")
+  GameTooltip:AddLine(L.TAGS_TOOLTIP_TITLE)
+  for _, t in ipairs(r.tags) do
+    GameTooltip:AddDoubleLine(t.label, L.TAG_FROM:format(t.word), 1, 1, 1, 0.7, 0.7, 0.7)
+  end
+  GameTooltip:Show()
 end
 
 -- Opens a whisper to a poster in the chat edit box.
@@ -127,7 +168,7 @@ end
 
 -- Lays out every poster and their messages below the row; returns the height.
 local function fillDetails(row, r, now, width)
-  local used, y = 0, ROW_HEIGHT
+  local used, y = 0, ROW_HEIGHT - 14 -- the message line is hidden when open
   for _, poster in ipairs(ns.Store.posters(r.entry)) do
     used = used + 1
     local header = detailLine(row, used)
@@ -178,6 +219,7 @@ function Window.Refresh()
     row.nameText:SetText(Window.DisplayName(r))
     row.metaText:SetText(meta(r, now))
     row.messageText:SetText(r.message)
+    row.tagText:SetText(#r.tags > 0 and Window.TagLine(r.tags) or L.NO_TAGS)
     local height = ROW_HEIGHT
     if expanded[r.id] then
       row.messageText:Hide()

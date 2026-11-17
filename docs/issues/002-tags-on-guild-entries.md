@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,9 +12,9 @@ Keyword rules assign tags in the groups Focus, Intensity, Wants, Schedule, Langu
 
 ## Acceptance criteria
 
-- [ ] Tags.extract covers every tag group, including class plurals and 'all classes' (unit tests)
-- [ ] A guild's tags combine all its messages
-- [ ] Rows show tags; the tooltip names the trigger word
+- [x] Tags.extract covers every tag group, including class plurals and 'all classes' (unit tests)
+- [x] A guild's tags combine all its messages
+- [x] Rows show tags; the tooltip names the trigger word
 
 ## Blocked by
 

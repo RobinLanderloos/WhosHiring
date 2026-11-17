@@ -205,6 +205,17 @@ check("the whisper button whispers the poster", whispered == "Alice-Realm", tost
 nightRow.scripts.OnClick(nightRow)
 check("clicking again closes the row", not shownTexts():find("Alice · LookingForGroup", 1, true), shownTexts())
 
+check("rows show the guild's tags", shownTexts():find("Raiding", 1, true) ~= nil and shownTexts():find("Tank", 1, true) ~= nil, shownTexts())
+local tipLines = {}
+rawset(GameTooltip, "AddDoubleLine", function(_, left, right) tipLines[#tipLines + 1] = left .. "=" .. right end)
+nightRow = find(function(w) return rawget(w, "data") and w.data.name == "Night Watch" and visible(w) end)
+nightRow.tagHit.scripts.OnEnter(nightRow.tagHit)
+check("the tag tooltip names the word behind each tag", table.concat(tipLines, ";"):find('Raiding="mc"', 1, true) ~= nil,
+  table.concat(tipLines, ";"))
+nightRow.tagHit.scripts.OnMouseUp(nightRow.tagHit)
+check("clicking the tag line opens the row too", shownTexts():find("Alice · LookingForGroup", 1, true) ~= nil)
+nightRow.scripts.OnClick(nightRow)
+
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
 

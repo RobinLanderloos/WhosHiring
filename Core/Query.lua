@@ -5,6 +5,15 @@ local addonName, ns = ...
 local Query = {}
 ns.Query = Query
 
+local function tagList(entry)
+  local list = {}
+  for _, def in ipairs(ns.Tags.definitions) do
+    local w = entry.tags and entry.tags[def.id]
+    if w then list[#list + 1] = { id = def.id, group = def.group, label = def.label, word = w } end
+  end
+  return list
+end
+
 local function row(entry)
   local latest = ns.Store.latest(entry)
   return {
@@ -13,6 +22,7 @@ local function row(entry)
     name = entry.name,
     message = latest and latest.text or "",
     unknownPoster = entry.unknownPoster,
+    tags = tagList(entry),
     sortName = (entry.name or entry.unknownPoster or ""):lower(),
     posters = ns.Store.posterCount(entry),
     lastSeen = entry.lastSeen,

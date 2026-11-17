@@ -89,7 +89,19 @@ function Store.record(db, message)
   end
   entry.lastSeen = math.max(entry.lastSeen or message.time, message.time)
   addMessage(entry, message)
+  Store.retag(entry)
   return status, entry, verdict
+end
+
+-- Tags are the union over the stored messages; the oldest message's word wins.
+function Store.retag(entry)
+  local tags = {}
+  for _, m in ipairs(entry.messages) do
+    for id, w in pairs(ns.Tags.extract(m.text, entry.name)) do
+      if not tags[id] then tags[id] = w end
+    end
+  end
+  entry.tags = tags
 end
 
 -- The most recently seen message of an entry.

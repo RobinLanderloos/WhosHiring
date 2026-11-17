@@ -42,3 +42,14 @@ test("unknown entries are listed with their poster and no name", function()
   end
   eq(unknown, 2, "unknown rows")
 end)
+
+test("rows list their tags in definition order with the trigger word", function()
+  local db = Store.init(nil)
+  record(db, "<Night Watch> casual guild recruiting healers and tanks for MC", "Bob-Realm", 100)
+  local tags = Query.list(db, { now = 200 })[1].tags
+  local ids = {}
+  for i, t in ipairs(tags) do ids[i] = t.id end
+  eq(table.concat(ids, ","), "raiding,casual,tank,healer", "order")
+  eq(tags[1].label, "Raiding", "label")
+  eq(tags[1].word, "mc", "word")
+end)
