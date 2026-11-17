@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,10 +12,10 @@ Each row has star and dismiss buttons, and the window has All, Starred and Dismi
 
 ## Acceptance criteria
 
-- [ ] Messages of a dismissed guild are not stored (unit test)
-- [ ] Dismissing an unknown entry dismisses the poster; a later named guild from that poster is not dismissed but shows the hint (unit test)
-- [ ] Restore brings the guild back into the list
-- [ ] Starred guilds sort first; the tabs show the right sets
+- [x] Messages of a dismissed guild are not stored (unit test)
+- [x] Dismissing an unknown entry dismisses the poster; a later named guild from that poster is not dismissed but shows the hint (unit test)
+- [x] Restore brings the guild back into the list
+- [x] Starred guilds sort first; the tabs show the right sets
 
 ## Blocked by
 

@@ -14,7 +14,7 @@ local function tagList(entry)
   return list
 end
 
-local function row(entry)
+local function row(db, entry)
   local latest = ns.Store.latest(entry)
   return {
     id = entry.realm .. "|" .. entry.key,
@@ -26,19 +26,52 @@ local function row(entry)
     sortName = (entry.name or entry.unknownPoster or ""):lower(),
     posters = ns.Store.posterCount(entry),
     lastSeen = entry.lastSeen,
+    starred = entry.starred,
+    dismissedPosterHint = ns.Store.hasDismissedPoster(db, entry) or nil,
   }
 end
 
--- options = { now }
+-- A row for the Dismissed tab, from the small dismissed record.
+local function dismissedRow(eid, record)
+  return {
+    id = eid,
+    name = record.name,
+    message = record.message and record.message.text or "",
+    unknownPoster = record.unknownPoster,
+    tags = tagList(record),
+    sortName = (record.name or record.unknownPoster or ""):lower(),
+    posters = record.message and 1 or 0,
+    lastSeen = record.message and record.message.last or record.time,
+    dismissed = true,
+    dismissedAt = record.time,
+  }
+end
+
+local function byStarThenNewest(a, b)
+  if (a.starred or false) ~= (b.starred or false) then return a.starred == true end
+  if a.lastSeen ~= b.lastSeen then return a.lastSeen > b.lastSeen end
+  return a.sortName < b.sortName
+end
+
+local function byDismissal(a, b)
+  if a.dismissedAt ~= b.dismissedAt then return a.dismissedAt > b.dismissedAt end
+  return a.sortName < b.sortName
+end
+
+-- options = { now, tab = "all" | "starred" | "dismissed" }
 function Query.list(db, options)
+  options = options or {}
+  local tab = options.tab or "all"
   local rows = {}
-  for _, entry in pairs(db.guilds) do
-    rows[#rows + 1] = row(entry)
+  if tab == "dismissed" then
+    for eid, record in pairs(db.dismissed) do rows[#rows + 1] = dismissedRow(eid, record) end
+    table.sort(rows, byDismissal)
+    return rows
   end
-  table.sort(rows, function(a, b)
-    if a.lastSeen ~= b.lastSeen then return a.lastSeen > b.lastSeen end
-    return a.sortName < b.sortName
-  end)
+  for _, entry in pairs(db.guilds) do
+    if tab ~= "starred" or entry.starred then rows[#rows + 1] = row(db, entry) end
+  end
+  table.sort(rows, byStarThenNewest)
   return rows
 end
 

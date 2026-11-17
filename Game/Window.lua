@@ -15,6 +15,8 @@ local FRAME_NAME = "WhosHiringFrame"
 local frame, content, emptyText
 local rows = {}
 local expanded = {} -- row id -> true while open (this session only)
+local currentTab = "all" -- "all", "starred" or "dismissed"
+local tabButtons = {}
 
 -- "Bob" from "Bob-Realm".
 local function shortName(sender)
@@ -42,9 +44,28 @@ local function restoreLayout()
   end
 end
 
+-- A small texture button with a tooltip.
+local function iconButton(parent, texture, tip)
+  local b = CreateFrame("Button", nil, parent)
+  b:SetSize(18, 18)
+  b.icon = b:CreateTexture(nil, "ARTWORK")
+  b.icon:SetAllPoints()
+  b.icon:SetTexture(texture)
+  local hl = b:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetAllPoints()
+  hl:SetColorTexture(1, 1, 1, 0.2)
+  b:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(tip)
+    GameTooltip:Show()
+  end)
+  b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  return b
+end
+
 -- Clicking a row opens or closes its poster list.
 local function toggle(row)
-  local key = row.data and row.data.id
+  local key = row.data and row.data.entry and row.data.id
   if key then
     expanded[key] = not expanded[key] or nil
     Window.Refresh()
@@ -66,8 +87,37 @@ local function newRow()
   row.nameText:SetPoint("TOPLEFT", 6, -4)
   row.nameText:SetJustifyH("LEFT")
 
+  -- Not interested (ADR 0003), star, and Restore on the Dismissed tab.
+  row.dismissButton = iconButton(row, "Interface\\Buttons\\UI-GroupLoot-Pass-Up", L.DISMISS_TIP)
+  row.dismissButton:SetPoint("TOPRIGHT", -6, -3)
+  row.dismissButton:SetScript("OnClick", function()
+    if row.data and row.data.entry then
+      expanded[row.data.id] = nil
+      ns.Store.dismiss(ns.db, row.data.entry, time())
+      Window.Refresh()
+    end
+  end)
+  row.starButton = iconButton(row, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1", L.STAR_TIP)
+  row.starButton:SetPoint("RIGHT", row.dismissButton, "LEFT", -6, 0)
+  row.starButton:SetScript("OnClick", function()
+    if row.data and row.data.entry then
+      ns.Store.star(row.data.entry, not row.data.entry.starred)
+      Window.Refresh()
+    end
+  end)
+  row.restoreButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+  row.restoreButton:SetSize(76, 20)
+  row.restoreButton:SetPoint("TOPRIGHT", -6, -3)
+  row.restoreButton:SetText(L.RESTORE)
+  row.restoreButton:SetScript("OnClick", function()
+    if row.data and row.data.dismissed then
+      ns.Store.restore(ns.db, row.data.id)
+      Window.Refresh()
+    end
+  end)
+
   row.metaText = row:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
-  row.metaText:SetPoint("TOPRIGHT", -6, -5)
+  row.metaText:SetPoint("TOPRIGHT", -56, -5)
   row.metaText:SetJustifyH("RIGHT")
   row.nameText:SetPoint("RIGHT", row.metaText, "LEFT", -8, 0)
 
@@ -109,8 +159,14 @@ local function ageText(seconds)
 end
 
 local function meta(r, now)
+  if r.dismissed then
+    local age = ns.Query.age(math.max(now - r.dismissedAt, 0))
+    return age == "now" and L.DISMISSED_NOW or L.DISMISSED_AGO:format(age)
+  end
   local posters = r.posters == 1 and L.POSTERS_ONE or L.POSTERS_MANY:format(r.posters)
-  return posters .. " · " .. ageText(now - (r.lastSeen or now))
+  local text = posters .. " · " .. ageText(now - (r.lastSeen or now))
+  if r.dismissedPosterHint then text = L.HINT_DISMISSED_POSTER .. "  " .. text end
+  return text
 end
 
 -- Colour per tag group, so the line reads at a glance.
@@ -206,7 +262,10 @@ end
 function Window.Refresh()
   if not frame or not frame:IsShown() then return end
   local now = time()
-  local list = ns.Query.list(ns.db, { now = now })
+  local list = ns.Query.list(ns.db, { now = now, tab = currentTab })
+  for tab, button in pairs(tabButtons) do
+    if tab == currentTab then button:LockHighlight() else button:UnlockHighlight() end
+  end
   local width = content:GetWidth()
   local y = 0
   for i, r in ipairs(list) do
@@ -218,6 +277,11 @@ function Window.Refresh()
     row:SetPoint("RIGHT", content, "RIGHT", 0, 0)
     row.nameText:SetText(Window.DisplayName(r))
     row.metaText:SetText(meta(r, now))
+    row.dismissButton:SetShown(not r.dismissed)
+    row.starButton:SetShown(not r.dismissed)
+    row.starButton.icon:SetAlpha(r.starred and 1 or 0.25)
+    row.starButton.icon:SetDesaturated(not r.starred)
+    row.restoreButton:SetShown(r.dismissed == true)
     row.messageText:SetText(r.message)
     row.tagText:SetText(#r.tags > 0 and Window.TagLine(r.tags) or L.NO_TAGS)
     local height = ROW_HEIGHT
@@ -234,6 +298,7 @@ function Window.Refresh()
   end
   for i = #list + 1, #rows do rows[i]:Hide() end
   content:SetHeight(math.max(y, 1))
+  emptyText:SetText(currentTab == "all" and L.NOTHING_YET or L.NOTHING_IN_TAB)
   emptyText:SetShown(#list == 0)
 end
 
@@ -278,7 +343,23 @@ local function build()
   end)
 
   local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-  scroll:SetPoint("TOPLEFT", 12, -32)
+  -- Tabs: All, Starred, Dismissed.
+  local previous
+  for _, tab in ipairs({ { "all", L.TAB_ALL }, { "starred", L.TAB_STARRED }, { "dismissed", L.TAB_DISMISSED } }) do
+    local b = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    b:SetSize(84, 20)
+    if previous then b:SetPoint("LEFT", previous, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 12, -30) end
+    b:SetText(tab[2])
+    b.tab = tab[1]
+    b:SetScript("OnClick", function(self)
+      currentTab = self.tab
+      Window.Refresh()
+    end)
+    tabButtons[tab[1]] = b
+    previous = b
+  end
+
+  scroll:SetPoint("TOPLEFT", 12, -56)
   scroll:SetPoint("BOTTOMRIGHT", -32, 24)
   content = CreateFrame("Frame", nil, scroll)
   content:SetSize(frame:GetWidth() - SCROLL_INSET, 1)

@@ -13,6 +13,8 @@ function Store.init(db)
   db.version = db.version or 1
   db.guilds = db.guilds or {}
   db.posters = db.posters or {} -- sender -> guild key, once a sender named a guild
+  db.dismissed = db.dismissed or {} -- id -> small record (ADR 0003)
+  db.dismissedPosters = db.dismissedPosters or {} -- sender -> time
   return db
 end
 
@@ -69,10 +71,15 @@ function Store.record(db, message)
   else
     -- An unnamed message from a poster whose guild is known goes there.
     local known = db.posters[message.sender]
-    key = known and Store.get(db, message.realm, known) and known or Store.unknownKey(message.sender)
+    local knownId = known and id(message.realm, known)
+    key = known and (db.guilds[knownId] or db.dismissed[knownId]) and known or Store.unknownKey(message.sender)
   end
   if name and message.ownGuild and ns.GuildName.normalize(message.ownGuild) == key then
     return "ignored", nil, verdict
+  end
+  if db.dismissed[id(message.realm, key)] or (not name and db.dismissedPosters[message.sender]) then
+    if name then db.posters[message.sender] = key end
+    return "dismissed", nil, verdict
   end
 
   local entry = Store.get(db, message.realm, key)
@@ -91,6 +98,48 @@ function Store.record(db, message)
   addMessage(entry, message)
   Store.retag(entry)
   return status, entry, verdict
+end
+
+-- "Not interested": the entry leaves the list and is no longer recorded.
+-- Only a small record stays, with the last message so Restore can show it.
+function Store.dismiss(db, entry, now)
+  local eid = id(entry.realm, entry.key)
+  local latest = Store.latest(entry)
+  db.dismissed[eid] = {
+    key = entry.key, realm = entry.realm, name = entry.name, unknownPoster = entry.unknownPoster,
+    time = now, tags = entry.tags, message = latest,
+  }
+  if entry.unknownPoster then db.dismissedPosters[entry.unknownPoster] = now end
+  db.guilds[eid] = nil
+end
+
+-- Undoes a dismissal; returns the entry that is back in the list.
+function Store.restore(db, eid)
+  local record = db.dismissed[eid]
+  if not record then return nil end
+  db.dismissed[eid] = nil
+  if record.unknownPoster then db.dismissedPosters[record.unknownPoster] = nil end
+  local m = record.message
+  local entry = {
+    key = record.key, realm = record.realm, name = record.name, unknownPoster = record.unknownPoster,
+    firstSeen = m and m.first or record.time, lastSeen = m and m.last or record.time,
+    messages = { m },
+  }
+  Store.retag(entry)
+  db.guilds[eid] = entry
+  return entry
+end
+
+-- True when the player dismissed one of this guild's posters earlier.
+function Store.hasDismissedPoster(db, entry)
+  for _, m in ipairs(entry.messages) do
+    if db.dismissedPosters[m.sender] then return true end
+  end
+  return false
+end
+
+function Store.star(entry, on)
+  entry.starred = on and true or nil
 end
 
 -- Tags are the union over the stored messages; the oldest message's word wins.

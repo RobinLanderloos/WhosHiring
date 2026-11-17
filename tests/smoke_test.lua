@@ -216,6 +216,45 @@ nightRow.tagHit.scripts.OnMouseUp(nightRow.tagHit)
 check("clicking the tag line opens the row too", shownTexts():find("Alice · LookingForGroup", 1, true) ~= nil)
 nightRow.scripts.OnClick(nightRow)
 
+local function rowOf(name)
+  return find(function(w) return rawget(w, "data") and w.data.name == name and visible(w) end)
+end
+local function tab(id)
+  local b = find(function(w) return rawget(w, "tab") == id end)
+  b.scripts.OnClick(b)
+end
+local function firstRowName()
+  local best
+  for _, w in ipairs(widgets) do
+    if rawget(w, "data") and visible(w) and w.point and w.point[5] == 0 then best = w.data.name end
+  end
+  return best
+end
+
+local iron = rowOf("Iron Oath")
+iron.starButton.scripts.OnClick(iron.starButton)
+check("a starred guild moves to the top", firstRowName() == "Iron Oath", tostring(firstRowName()))
+tab("starred")
+check("the Starred tab shows only starred guilds", shownTexts():find("Iron Oath", 1, true) ~= nil
+  and shownTexts():find("Night Watch", 1, true) == nil, shownTexts())
+tab("all")
+
+local ashen = rowOf("Ashen Order")
+ashen.dismissButton.scripts.OnClick(ashen.dismissButton)
+check("a dismissed guild leaves the list", shownTexts():find("Ashen Order", 1, true) == nil, shownTexts())
+chat("CHAT_MSG_WHISPER", "<Ashen Order> recruiting, want an invite?", "Max-Other")
+check("a dismissed guild is not recorded again", shownTexts():find("Ashen Order", 1, true) == nil, shownTexts())
+tab("dismissed")
+check("the Dismissed tab lists it", shownTexts():find("Ashen Order", 1, true) ~= nil
+  and shownTexts():find("dismissed now ago", 1, true) == nil, shownTexts())
+local dismissedRow = rowOf("Ashen Order")
+check("the Dismissed tab has a Restore button", dismissedRow and visible(dismissedRow.restoreButton))
+check("dismissed rows have no star or dismiss button", dismissedRow and not visible(dismissedRow.starButton))
+dismissedRow.restoreButton.scripts.OnClick(dismissedRow.restoreButton)
+check("restored guilds leave the Dismissed tab", shownTexts():find("Ashen Order", 1, true) == nil, shownTexts())
+tab("all")
+check("restored guilds are back in the list", shownTexts():find("Ashen Order", 1, true) ~= nil, shownTexts())
+
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)
 

@@ -64,7 +64,7 @@
       "id": "005",
       "title": "Star, dismiss and restore",
       "description": "Each row has star and dismiss buttons, and the window has All, Starred and Dismissed tabs. Dismissing stops recording the guild and keeps only a dismissed record. Dismissing an unknown entry dismisses the poster. The Dismissed tab can restore. Guilds that have a dismissed poster show a hint. Starred guilds sort first.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/005-star-dismiss-and-restore.md",
       "acceptanceCriteria": [
         "Messages of a dismissed guild are not stored (unit test)",
