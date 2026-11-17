@@ -297,7 +297,7 @@ end
 
 -- The Who's online answer under the button: a status line, or the members
 -- with a Whisper button each.
-local MAX_ONLINE_SHOWN = 15
+local MAX_ONLINE_SHOWN = 5
 local function fillOnline(row, r, y, used, width)
   local state = online[r.id]
   if not state then return y, used end
