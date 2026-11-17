@@ -80,5 +80,7 @@ end)
 
 -- Called after every recorded message; the window and later features hook in.
 function ns.OnRecorded(status, entry)
-  if status ~= "ignored" and ns.Window then ns.Window.OnRecorded(status, entry) end
+  if status == "ignored" or status == "dismissed" then return end
+  if ns.Window then ns.Window.OnRecorded(status, entry) end
+  if ns.MinimapButton then ns.MinimapButton.UpdateCount() end
 end

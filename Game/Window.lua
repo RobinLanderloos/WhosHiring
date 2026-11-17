@@ -386,7 +386,16 @@ local function build()
   emptyText:SetPoint("CENTER")
   emptyText:SetText(L.NOTHING_YET)
 
-  frame:SetScript("OnShow", function() Window.Refresh() end)
+  -- Whatever was in the list while it was open is no longer new.
+  local function seen()
+    ns.Store.markOpened(ns.db, time())
+    if ns.MinimapButton then ns.MinimapButton.UpdateCount() end
+  end
+  frame:SetScript("OnShow", function()
+    Window.Refresh()
+    seen()
+  end)
+  frame:SetScript("OnHide", seen)
   frame:Hide()
 end
 

@@ -231,3 +231,17 @@ function Store.parseDays(text, min, max)
   local n = tonumber(((text or ""):match("^%s*(%d+)%s*$")))
   if n and n >= min and n <= max then return n end
 end
+
+-- The list was opened: everything seen so far is no longer new.
+function Store.markOpened(db, now)
+  db.lastOpened = now
+end
+
+-- Guilds first seen since the list was last opened (the minimap counter).
+function Store.newCount(db)
+  local since, n = db.lastOpened or -math.huge, 0
+  for _, entry in pairs(db.guilds) do
+    if (entry.firstSeen or 0) > since then n = n + 1 end
+  end
+  return n
+end

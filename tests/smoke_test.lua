@@ -111,6 +111,8 @@ _G.UnitName = function() return "Me" end
 _G.GetNormalizedRealmName = function() return "Realm" end
 _G.GetGuildInfo = function() return "My Guild" end
 _G.date = os.date
+_G.Minimap = newWidget()
+_G.GetCursorPosition = function() return 0, 0 end
 _G.wipe = function(t) for k in pairs(t) do t[k] = nil end return t end
 local whispered
 _G.ChatFrame_SendTell = function(name) whispered = name end
@@ -304,6 +306,30 @@ check("the sort button shows the order", sort ~= nil, shownTexts())
 sort.scripts.OnClick(sort)
 check("the sort button cycles", button("Sort: name") ~= nil and WhosHiringDB.ui.sort == "name")
 toggleFilters.scripts.OnClick(toggleFilters)
+
+local mm = find(function(w) return rawget(w, "name") == "WhosHiringMinimapButton" end)
+check("the minimap button exists", mm ~= nil)
+if mm then
+  slash("WHOSHIRING", "") -- close the list
+  check("the list is closed", not visible(find(function(w) return rawget(w, "name") == "WhosHiringFrame" end)))
+  clock = clock + 60
+  chat("CHAT_MSG_CHANNEL", "<Brand New> is recruiting", "Neo-Realm", "2. Trade - City", "Trade - City")
+  chat("CHAT_MSG_CHANNEL", "<Brand Newer> is recruiting", "Nia-Realm", "2. Trade - City", "Trade - City")
+  check("the minimap badge counts new guilds", visible(mm.badge) and mm.count:GetText() == "2", mm.count:GetText())
+  mm.scripts.OnClick(mm, "LeftButton")
+  check("left-click opens the list", shownTexts():find("Brand New", 1, true) ~= nil)
+  check("opening the list clears the badge", not visible(mm.badge))
+  local minimapBox
+  for _, w in ipairs(widgets) do
+    if w.scripts.OnClick and type(rawget(w, "Text")) == "table" and w.Text:GetText() == "Show the minimap button" then minimapBox = w end
+  end
+  check("the settings have a minimap checkbox", minimapBox ~= nil)
+  if minimapBox then
+    rawset(minimapBox, "GetChecked", function() return false end)
+    minimapBox.scripts.OnClick(minimapBox)
+    check("unticking hides the minimap button", not mm.shown and WhosHiringDB.settings.minimap.hide == true)
+  end
+end
 
 chat("CHAT_MSG_CHANNEL", nil, "Bob-Realm")
 check("a nil message does not break anything", WhosHiringDB.lastError == nil, WhosHiringDB.lastError)

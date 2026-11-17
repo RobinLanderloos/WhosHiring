@@ -12,6 +12,7 @@ for _, file in ipairs({
   "Core/Store.lua",
   "Core/Query.lua",
   "Core/Alert.lua",
+  "Core/Geometry.lua",
 }) do
   assert(loadfile(file))(ADDON, ns)
 end
@@ -41,6 +42,7 @@ for _, file in ipairs({
   "tests/store_test.lua",
   "tests/query_test.lua",
   "tests/alert_test.lua",
+  "tests/geometry_test.lua",
 }) do
   local chunk = loadfile(file)
   if chunk then chunk(ns, test, eq) end

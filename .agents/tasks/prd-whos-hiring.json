@@ -111,7 +111,7 @@
       "id": "008",
       "title": "Minimap button with new-guild counter",
       "description": "A draggable minimap button toggles the window and shows how many guilds are new since the window was last opened. It can be hidden in settings.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/008-minimap-button-with-new-guild-counter.md",
       "acceptanceCriteria": [
         "Store tracks the new-guild count since lastOpened (unit test)",
