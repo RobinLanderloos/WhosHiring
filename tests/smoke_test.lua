@@ -212,18 +212,23 @@ chat("CHAT_MSG_CHANNEL", "<Night Watch> recruiting healers, raids wed/thu", "Ali
 chat("CHAT_MSG_CHANNEL", "<Night Watch> recruiting healers, raids wed/thu", "Alice-Realm", "4. LookingForGroup", "LookingForGroup")
 local nightRow = find(function(w) return rawget(w, "data") and w.data.name == "Night Watch" and visible(w) end)
 check("the Night Watch row exists", nightRow ~= nil)
-check("a closed row hides the poster lines", not shownTexts():find("Alice · LookingForGroup", 1, true), shownTexts())
+check("a closed row hides the poster lines", not shownTexts():find("Alice|r  1 message(s)", 1, true), shownTexts())
 nightRow.scripts.OnClick(nightRow)
 texts = shownTexts()
-check("an opened row lists every poster", texts:find("Alice · LookingForGroup", 1, true) ~= nil
-  and texts:find("Bob · Trade - City", 1, true) ~= nil, texts)
-check("an opened row shows repeats once with a count", texts:find("raids wed/thu  (x2)", 1, true) ~= nil, texts)
+check("an opened row lists every poster", texts:find("Alice|r  1 message(s)", 1, true) ~= nil
+  and texts:find("Bob|r  1 message(s)", 1, true) ~= nil, texts)
+check("each message shows its own channel and age", texts:find("LookingForGroup · seen just now", 1, true) ~= nil
+  and texts:find("Trade - City · seen", 1, true) ~= nil, texts)
+check("an opened row shows repeats once with a count", texts:find("posted 2x", 1, true) ~= nil, texts)
+local accents = 0
+for _, w in ipairs(widgets) do if rawget(w, "accent") and visible(w) and visible(w.accent) then accents = accents + 1 end end
+check("each message is its own block with a poster colour bar", accents == 2, accents)
 local whisperButton = find(function(w) return rawget(w, "sender") == "Alice-Realm" and visible(w) end)
 check("each poster has a whisper button", whisperButton ~= nil)
 if whisperButton then whisperButton.scripts.OnClick(whisperButton) end
 check("the whisper button whispers a same-realm poster by name only", whispered == "Alice", tostring(whispered))
 nightRow.scripts.OnClick(nightRow)
-check("clicking again closes the row", not shownTexts():find("Alice · LookingForGroup", 1, true), shownTexts())
+check("clicking again closes the row", not shownTexts():find("Alice|r  1 message(s)", 1, true), shownTexts())
 
 check("rows show the guild's tags", shownTexts():find("Raiding", 1, true) ~= nil and shownTexts():find("Tank", 1, true) ~= nil, shownTexts())
 local tipLines = {}
@@ -233,7 +238,7 @@ nightRow.tagHit.scripts.OnEnter(nightRow.tagHit)
 check("the tag tooltip names the word behind each tag", table.concat(tipLines, ";"):find('Raiding="mc"', 1, true) ~= nil,
   table.concat(tipLines, ";"))
 nightRow.tagHit.scripts.OnMouseUp(nightRow.tagHit)
-check("clicking the tag line opens the row too", shownTexts():find("Alice · LookingForGroup", 1, true) ~= nil)
+check("clicking the tag line opens the row too", shownTexts():find("Alice|r  1 message(s)", 1, true) ~= nil)
 nightRow.scripts.OnClick(nightRow)
 
 local function rowOf(name)
@@ -384,7 +389,7 @@ check("the alert plays a sound", sounds == 1, sounds)
 local linkCode = alertLines:match("|H(addon:whoshiring:%d+)|h")
 check("the alert line has a link", linkCode ~= nil, alertLines)
 for _, hook in ipairs(itemRefHooks) do hook(linkCode or "") end
-check("clicking the link opens the guild with its posters", shownTexts():find("Pat · Trade - City", 1, true) ~= nil, shownTexts())
+check("clicking the link opens the guild with its posters", shownTexts():find("Pat|r  1 message(s)", 1, true) ~= nil, shownTexts())
 
 -- Who's online
 nightRow = rowOf("Night Watch")

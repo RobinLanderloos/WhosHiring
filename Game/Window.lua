@@ -292,6 +292,18 @@ local function detailLine(row, index)
   local line = row.detailLines[index]
   if line then return line end
   line = CreateFrame("Frame", nil, row)
+  -- Message blocks get a light background, a bar in the poster's colour and
+  -- a small meta line; poster headers and online lines leave them hidden.
+  line.bg = line:CreateTexture(nil, "BACKGROUND")
+  line.bg:SetAllPoints()
+  line.bg:SetColorTexture(1, 1, 1, 0.05)
+  line.accent = line:CreateTexture(nil, "ARTWORK")
+  line.accent:SetPoint("TOPLEFT", 0, 0)
+  line.accent:SetPoint("BOTTOMLEFT", 0, 0)
+  line.accent:SetWidth(3)
+  line.meta = line:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+  line.meta:SetPoint("TOPLEFT", 9, -4)
+  line.meta:SetJustifyH("LEFT")
   line.text = line:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
   line.text:SetPoint("TOPLEFT", 0, 0)
   line.text:SetPoint("RIGHT", line, "RIGHT", -84, 0)
@@ -305,6 +317,16 @@ local function detailLine(row, index)
   return line
 end
 
+-- Header and online lines: just text (and maybe a Whisper button).
+local function plainLine(line)
+  line.bg:Hide()
+  line.accent:Hide()
+  line.meta:Hide()
+  line.text:ClearAllPoints()
+  line.text:SetPoint("TOPLEFT", 0, 0)
+  line.text:SetPoint("RIGHT", line, "RIGHT", -84, 0)
+end
+
 -- The Who's online answer under the button: a status line, or the members
 -- with a Whisper button each.
 local MAX_ONLINE_SHOWN = 5
@@ -314,6 +336,7 @@ local function fillOnline(row, r, y, used, width)
   local function line(text, sender)
     used = used + 1
     local l = detailLine(row, used)
+    plainLine(l)
     l:ClearAllPoints()
     l:SetPoint("TOPLEFT", row, "TOPLEFT", 24, -y)
     l:SetSize(width - 34, 18)
@@ -346,6 +369,15 @@ local function fillOnline(row, r, y, used, width)
 end
 
 -- Lays out every poster and their messages below the row; returns the height.
+-- One colour per poster, so their message blocks are told apart at a glance.
+local POSTER_COLORS = {
+  { hex = "66c2ff", r = 0.4, g = 0.76, b = 1 },
+  { hex = "ffb84d", r = 1, g = 0.72, b = 0.3 },
+  { hex = "8ae68a", r = 0.54, g = 0.9, b = 0.54 },
+  { hex = "e699ff", r = 0.9, g = 0.6, b = 1 },
+  { hex = "ff8080", r = 1, g = 0.5, b = 0.5 },
+}
+
 local function fillDetails(row, r, now, width)
   local used, y = 0, ROW_HEIGHT - 14 -- the message line is hidden when open
   if r.name then
@@ -357,35 +389,49 @@ local function fillDetails(row, r, now, width)
   else
     row.whoButton:Hide() -- an unknown guild has no name to search
   end
-  for _, poster in ipairs(ns.Store.posters(r.entry)) do
+  for p, poster in ipairs(ns.Store.posters(r.entry)) do
+    local color = POSTER_COLORS[(p - 1) % #POSTER_COLORS + 1]
     used = used + 1
     local header = detailLine(row, used)
+    plainLine(header)
     header:ClearAllPoints()
     header:SetPoint("TOPLEFT", row, "TOPLEFT", 14, -y)
     header:SetSize(width - 20, 18)
-    header.text:SetText(L.POSTER_LINE:format(shortName(poster.sender), poster.messages[1].channel or "",
-      ageText(now - poster.lastSeen)))
+    header.text:ClearAllPoints()
+    header.text:SetPoint("TOPLEFT", 0, 0)
+    header.text:SetPoint("RIGHT", header, "RIGHT", -84, 0)
     header.text:SetFontObject("GameFontNormalSmall")
+    header.text:SetText("|cff" .. color.hex .. shortName(poster.sender) .. "|r  " ..
+      L.POSTER_MESSAGES:format(#poster.messages))
     header.whisper.sender = poster.sender
     header.whisper:Show()
     header:Show()
-    y = y + 20
+    y = y + 22
     for _, m in ipairs(poster.messages) do
       used = used + 1
       local line = detailLine(row, used)
       line:ClearAllPoints()
-      line:SetPoint("TOPLEFT", row, "TOPLEFT", 24, -y)
+      line:SetPoint("TOPLEFT", row, "TOPLEFT", 20, -y)
+      line.bg:Show()
+      line.accent:SetColorTexture(color.r, color.g, color.b, 0.9)
+      line.accent:Show()
+      local meta = (m.channel or "") .. " · " .. ageText(now - (m.last or now))
+      if m.count > 1 then meta = meta .. " · " .. L.REPEATS:format(m.count) end
+      line.meta:SetText(meta)
+      line.meta:Show()
+      line.text:ClearAllPoints()
+      line.text:SetPoint("TOPLEFT", line.meta, "BOTTOMLEFT", 0, -3)
       line.text:SetFontObject("GameFontHighlightSmall")
-      line.text:SetWidth(width - 34)
+      line.text:SetWidth(width - 50)
       line.text:SetWordWrap(true)
-      line.text:SetText(m.count > 1 and (m.text .. "  " .. L.REPEATS:format(m.count)) or m.text)
-      local height = math.max((line.text:GetStringHeight() or 0) + 4, 14)
-      line:SetSize(width - 34, height)
+      line.text:SetText(m.text)
+      local height = (line.text:GetStringHeight() or 0) + 26
+      line:SetSize(width - 30, height)
       line.whisper:Hide()
       line:Show()
-      y = y + height
+      y = y + height + 5
     end
-    y = y + 4
+    y = y + 7
   end
   for i = used + 1, #row.detailLines do row.detailLines[i]:Hide() end
   return y + 2
