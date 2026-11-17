@@ -1,0 +1,9 @@
+# Release builds (scripts/package.ps1)
+dist/
+
+# Editor and OS clutter
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store

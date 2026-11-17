@@ -1,0 +1,20 @@
+## Interface: 16001
+## Title: Who's Hiring?
+## Notes: Keeps a list of guilds recruiting in chat, with tags, stars and a not-interested list.
+## Author: Robin
+## Version: 0.1.0
+## SavedVariables: WhosHiringDB
+## IconTexture: Interface\Icons\INV_Misc_Note_02
+
+Locales\enUS.lua
+Core\Text.lua
+Core\Detect.lua
+Core\GuildName.lua
+Core\Tags.lua
+Core\Store.lua
+Core\Query.lua
+Core\Alert.lua
+Game\Report.lua
+Game\Main.lua
+Game\Window.lua
+Game\Slash.lua

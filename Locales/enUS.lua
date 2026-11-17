@@ -1,0 +1,14 @@
+-- The addon's own labels. Kept in one place for translation later.
+local addonName, ns = ...
+
+ns.L = {
+  TITLE = "Who's Hiring?",
+  NOTHING_YET = "No recruiting guilds seen yet.\nThey appear here as they post in chat.",
+  NOTHING_MATCHES = "No guilds match these filters.",
+  POSTERS_ONE = "1 poster",
+  POSTERS_MANY = "%d posters",
+  SEEN = "seen %s ago",
+  SEEN_NOW = "seen just now",
+  LOADED = "loaded. Type /wh to open the list.",
+  HELP = "/wh: open the list. /wh debug: log near misses. /wh report: write a report.",
+}

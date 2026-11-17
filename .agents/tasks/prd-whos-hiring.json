@@ -1,0 +1,181 @@
+{
+  "userStories": [
+    {
+      "id": "001",
+      "title": "Record recruiting guilds and show them in a list",
+      "description": "Tracer bullet. The project skeleton (.toc, Core/Game split, test runner, smoke stub, junction into AddOns) is in place. Chat events (numbered channels, Say, Yell, Whisper) go through recruitment detection and guild-name parsing into the account-wide store, skipping the player's own messages and the player's own guild's. `/wh` and `/whoshiring` open a movable, resizable, Escape-closable window listing guild entries (name, latest message, number of posters, last seen), newest first.",
+      "status": "completed",
+      "markdownFile": "docs/issues/001-record-recruiting-guilds-and-show-them-in-a-list.md",
+      "acceptanceCriteria": [
+        "Detect.classify accepts recruitment and rejects LF guild, WTS/WTB and dungeon LFG messages (unit tests with a message corpus)",
+        "GuildName.parse handles <Brackets> and 'Name is recruiting' style phrases; normalize gives a stable key (unit tests)",
+        "Store.record creates and updates guild entries keyed per realm and skips the player's own guild",
+        "/wh and /whoshiring toggle the window; rows show name, latest message, poster count and last seen",
+        "Smoke test fires chat events and sees the rows in the window"
+      ],
+      "blockedBy": []
+    },
+    {
+      "id": "002",
+      "title": "Tags on guild entries",
+      "description": "Keyword rules assign tags in the groups Focus, Intensity, Wants, Schedule, Language/Region and Other. A guild's tags are the union over all its messages and remember the trigger word. Rows show the tags, and hovering over a tag shows which word set it.",
+      "status": "open",
+      "markdownFile": "docs/issues/002-tags-on-guild-entries.md",
+      "acceptanceCriteria": [
+        "Tags.extract covers every tag group, including class plurals and 'all classes' (unit tests)",
+        "A guild's tags combine all its messages",
+        "Rows show tags; the tooltip names the trigger word"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "003",
+      "title": "Expand a guild to see every poster",
+      "description": "Clicking a row expands it to show every poster's messages with times and counts. Identical repeats from the same poster are stored once, with a count and a last-seen time. Each poster has a Whisper button.",
+      "status": "open",
+      "markdownFile": "docs/issues/003-expand-a-guild-to-see-every-poster.md",
+      "acceptanceCriteria": [
+        "Identical repeats increase the count instead of adding a message (unit test)",
+        "The expanded row lists every poster with message, time and count",
+        "The Whisper button opens a whisper to that poster"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "004",
+      "title": "Unknown guild entries that merge later",
+      "description": "Messages without a parsable guild name create an 'Unknown guild, posted by X' entry keyed on the poster. When that poster later names the guild, the unknown entry merges into the guild entry.",
+      "status": "open",
+      "markdownFile": "docs/issues/004-unknown-guild-entries-that-merge-later.md",
+      "acceptanceCriteria": [
+        "An unparsable message creates an unknown entry (unit test)",
+        "A later named message by the same poster merges messages and tags into the guild and removes the unknown entry (unit test)",
+        "Unknown entries show as 'Unknown guild, posted by X'"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "005",
+      "title": "Star, dismiss and restore",
+      "description": "Each row has star and dismiss buttons, and the window has All, Starred and Dismissed tabs. Dismissing stops recording the guild and keeps only a dismissed record. Dismissing an unknown entry dismisses the poster. The Dismissed tab can restore. Guilds that have a dismissed poster show a hint. Starred guilds sort first.",
+      "status": "open",
+      "markdownFile": "docs/issues/005-star-dismiss-and-restore.md",
+      "acceptanceCriteria": [
+        "Messages of a dismissed guild are not stored (unit test)",
+        "Dismissing an unknown entry dismisses the poster; a later named guild from that poster is not dismissed but shows the hint (unit test)",
+        "Restore brings the guild back into the list",
+        "Starred guilds sort first; the tabs show the right sets"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "006",
+      "title": "Filter chips, search and sorting",
+      "description": "Chip rows built from the tag definitions filter the list: OR within a group, AND across groups. A search box matches guild names and message text. Sorting by last seen (default), name or poster count, always with starred first.",
+      "status": "open",
+      "markdownFile": "docs/issues/006-filter-chips-search-and-sorting.md",
+      "acceptanceCriteria": [
+        "Query.list implements OR within a group and AND across groups (unit tests)",
+        "Search matches names and message text, ignoring case (unit tests)",
+        "Chips and search box in the window update the list"
+      ],
+      "blockedBy": [
+        "002"
+      ]
+    },
+    {
+      "id": "007",
+      "title": "Retention: message cap, stale and prune",
+      "description": "Each guild keeps at most 20 distinct messages. Guilds not seen for staleDays are greyed out, and after pruneDays they are removed at login unless starred. Dismissed records are never pruned. A settings panel exposes the day limits.",
+      "status": "open",
+      "markdownFile": "docs/issues/007-retention-message-cap-stale-and-prune.md",
+      "acceptanceCriteria": [
+        "The message cap keeps the newest messages (unit test)",
+        "Prune removes old, unstarred guilds and keeps starred guilds and dismissed records (unit test)",
+        "Stale rows show greyed out with 'last seen Nd ago'",
+        "Settings panel changes staleDays and pruneDays"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "008",
+      "title": "Minimap button with new-guild counter",
+      "description": "A draggable minimap button toggles the window and shows how many guilds are new since the window was last opened. It can be hidden in settings.",
+      "status": "open",
+      "markdownFile": "docs/issues/008-minimap-button-with-new-guild-counter.md",
+      "acceptanceCriteria": [
+        "Store tracks the new-guild count since lastOpened (unit test)",
+        "The button toggles the window and shows the counter; opening the window resets it",
+        "The button can be dragged and hidden; its position persists"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "009",
+      "title": "Saved-filter alert",
+      "description": "'Alert me on this filter' saves the current chip selection. When a new or newly matching guild matches it, one clickable chat line (and an optional sound) appears, once per guild.",
+      "status": "open",
+      "markdownFile": "docs/issues/009-saved-filter-alert.md",
+      "acceptanceCriteria": [
+        "Alert.shouldAlert fires once per guild for new matches (unit tests)",
+        "The chat line opens the window on that guild",
+        "Alerts and the sound can be turned off in settings"
+      ],
+      "blockedBy": [
+        "006",
+        "008"
+      ]
+    },
+    {
+      "id": "010",
+      "title": "Debug mode and report",
+      "description": "`/wh debug` toggles logging of near-miss rejected messages and channel names seen. `/wh report` writes a summary. Both are stored in SavedVariables so they can be read after /reload.",
+      "status": "open",
+      "markdownFile": "docs/issues/010-debug-mode-and-report.md",
+      "acceptanceCriteria": [
+        "Near misses and channel names are logged to SavedVariables while debug is on, with a capped size",
+        "/wh report writes counts and settings to SavedVariables"
+      ],
+      "blockedBy": [
+        "001"
+      ]
+    },
+    {
+      "id": "011",
+      "title": "Verify client assumptions in-game",
+      "description": "The user runs the addon live: chat events arrive with the expected arguments, /wh isn't taken, Whisper and the player menu work, the minimap button works, and SavedVariables persist. Detection rules are tuned from the debug log.",
+      "status": "open",
+      "markdownFile": "docs/issues/011-verify-client-assumptions-in-game.md",
+      "acceptanceCriteria": [
+        "Real recruitment messages are captured and tagged sensibly",
+        "/wh works (no conflict)",
+        "Whisper button and alerts work in the client",
+        "Rules tuned from the debug log"
+      ],
+      "blockedBy": [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+        "007",
+        "008",
+        "009",
+        "010"
+      ]
+    }
+  ]
+}

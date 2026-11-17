@@ -1,0 +1,58 @@
+local ns, test, eq = ...
+local Store = ns.Store
+
+local function msg(text, sender, time, extra)
+  local m = { text = text, sender = sender or "Bob-Realm", channel = "Trade", time = time or 1000, realm = "Realm" }
+  for k, v in pairs(extra or {}) do m[k] = v end
+  return m
+end
+
+test("a recruitment message creates a guild entry", function()
+  local db = Store.init(nil)
+  local status, entry = Store.record(db, msg("<Night Watch> is recruiting tanks"))
+  eq(status, "new", "status")
+  eq(entry.name, "Night Watch", "name")
+  eq(entry.lastSeen, 1000, "lastSeen")
+  eq(Store.latest(entry).text, "<Night Watch> is recruiting tanks", "latest message")
+  eq(Store.posterCount(entry), 1, "posters")
+  eq(Store.get(db, "Realm", "night watch"), entry, "stored under realm and key")
+end)
+
+test("a message that is not recruitment is not stored", function()
+  local db = Store.init(nil)
+  local status = Store.record(db, msg("WTS Linen Cloth"))
+  eq(status, "ignored")
+  eq(next(db.guilds), nil, "nothing stored")
+end)
+
+test("a second poster from the same guild adds to the same entry", function()
+  local db = Store.init(nil)
+  local _, first = Store.record(db, msg("<Night Watch> is recruiting tanks", "Bob-Realm", 1000))
+  local status, second = Store.record(db, msg("Night Watch is recruiting all classes, casual raiding", "Alice-Realm", 2000))
+  eq(status, "updated", "status")
+  eq(second, first, "same entry")
+  eq(Store.posterCount(second), 2, "posters")
+  eq(Store.latest(second).sender, "Alice-Realm", "latest poster")
+  eq(second.lastSeen, 2000, "lastSeen")
+end)
+
+test("the player's own guild is not recorded", function()
+  local db = Store.init(nil)
+  local status = Store.record(db, msg("<Night Watch> is recruiting", nil, nil, { ownGuild = "Night Watch" }))
+  eq(status, "ignored")
+  eq(next(db.guilds), nil, "nothing stored")
+end)
+
+test("guilds with the same name on different realms are separate", function()
+  local db = Store.init(nil)
+  local _, a = Store.record(db, msg("<Night Watch> recruiting", "Bob-Realm", 1, { realm = "Realm" }))
+  local _, b = Store.record(db, msg("<Night Watch> recruiting", "Kim-Other", 2, { realm = "Other" }))
+  eq(a ~= b, true, "different entries")
+end)
+
+test("init keeps saved guilds", function()
+  local saved = Store.init(nil)
+  Store.record(saved, msg("<Night Watch> recruiting"))
+  local db = Store.init(saved)
+  eq(Store.get(db, "Realm", "night watch").name, "Night Watch")
+end)
