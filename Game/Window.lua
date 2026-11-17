@@ -211,12 +211,43 @@ end
 
 -- Runs /who g-"Name" through the game's own Who window, the same path as
 -- typing it there, so the click counts as the player's own search.
+local function tabText(tab)
+  local text = tab.GetText and tab:GetText()
+  if not text and tab.GetFontString and tab:GetFontString() then text = tab:GetFontString():GetText() end
+  return text
+end
+
+-- Shows the Friends window on its Who tab. Tab numbers differ between
+-- clients (on Forever, 2 is Raid), so the tab is found by its label.
+-- What was found is saved for /reload diagnosis.
+local function showWhoTab()
+  local info = { tabs = {} }
+  ns.db.whoDebug = info
+  if not FriendsFrame then info.problem = "no FriendsFrame"; return end
+  if not FriendsFrame:IsShown() then
+    if ToggleFriendsFrame then ToggleFriendsFrame() elseif ShowUIPanel then ShowUIPanel(FriendsFrame) end
+  end
+  if WhoFrame and WhoFrame:IsShown() then info.shown = true; return end
+  local label = WHO or "Who"
+  local whoTab
+  for i = 1, FriendsFrame.numTabs or 6 do
+    local tab = _G["FriendsFrameTab" .. i]
+    if tab then
+      local text = tabText(tab)
+      info.tabs[#info.tabs + 1] = i .. "=" .. tostring(text)
+      if text == label then whoTab = tab end
+    end
+  end
+  if whoTab then whoTab:Click() end
+  info.clicked = whoTab ~= nil
+  info.shown = WhoFrame ~= nil and WhoFrame:IsShown()
+end
+
 function Window.WhoOnline(name)
   local query = ns.GuildName.whoQuery(name)
   if not query then return end
-  if ToggleFriendsFrame and not (WhoFrame and WhoFrame:IsVisible()) then
-    ToggleFriendsFrame(FRIENDS_TAB_WHO or 2)
-  end
+  local ok, err = pcall(showWhoTab)
+  if not ok then ns.db.whoDebug = { problem = tostring(err) } end
   if WhoFrameEditBox and WhoFrameWhoButton then
     WhoFrameEditBox:SetText(query)
     WhoFrameWhoButton:Click()

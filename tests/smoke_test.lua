@@ -115,9 +115,17 @@ local whoQuery
 _G.WhoFrameEditBox = newWidget()
 _G.WhoFrameWhoButton = newWidget()
 rawset(WhoFrameWhoButton, "Click", function() whoQuery = WhoFrameEditBox:GetText() end)
+-- Forever's Friends window: tab 2 is Raid, the Who tab is found by its label.
+_G.WHO = "Who"
+_G.FriendsFrame = newWidget(); FriendsFrame:Hide(); rawset(FriendsFrame, "numTabs", 4)
+_G.WhoFrame = newWidget(FriendsFrame); WhoFrame:Hide()
 local friendsTab
-_G.ToggleFriendsFrame = function(tab) friendsTab = tab end
-_G.FRIENDS_TAB_WHO = 2
+for i, label in ipairs({ "Friends", "Raid", "Who", "Quick Join" }) do
+  local tab = newWidget(); tab:SetText(label)
+  rawset(tab, "Click", function() friendsTab = label; WhoFrame.shown = label == "Who" end)
+  _G["FriendsFrameTab" .. i] = tab
+end
+_G.ToggleFriendsFrame = function() FriendsFrame:Show() end
 local itemRefHooks = {}
 _G.SetItemRef = function() end
 _G.hooksecurefunc = function(name, fn) if name == "SetItemRef" then itemRefHooks[#itemRefHooks + 1] = fn end end
@@ -387,7 +395,9 @@ nightRow = rowOf("Night Watch")
 nightRow.scripts.OnClick(nightRow)
 check("an open named guild has a Who's online button", visible(nightRow.whoButton))
 nightRow.whoButton.scripts.OnClick(nightRow.whoButton)
-check("the button opens the Who tab", friendsTab == 2, tostring(friendsTab))
+check("the button opens the tab labelled Who", friendsTab == "Who" and visible(WhoFrame), tostring(friendsTab))
+check("what the Who button found is saved", WhosHiringDB.whoDebug and WhosHiringDB.whoDebug.shown == true
+  and WhosHiringDB.whoDebug.tabs[2] == "2=Raid")
 check("the button searches the guild's online members", whoQuery == 'g-"Night Watch"', tostring(whoQuery))
 nightRow.scripts.OnClick(nightRow)
 check("closing the row hides the Who button", not visible(nightRow.whoButton))
