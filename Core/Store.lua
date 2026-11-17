@@ -7,6 +7,26 @@ ns.Store = Store
 
 local function id(realm, key) return realm .. "|" .. key end
 
+-- Raise when Detect or Tags rules change, so saved entries are re-checked.
+Store.RULES_VERSION = 2
+
+-- Re-applies the current rules to every saved entry: messages that no longer
+-- count as recruitment are dropped (and entries left empty), tags recomputed.
+function Store.recheck(db)
+  for eid, entry in pairs(db.guilds) do
+    local kept = {}
+    for _, m in ipairs(entry.messages or {}) do
+      if ns.Detect.classify(m.text).isRecruit then kept[#kept + 1] = m end
+    end
+    if #kept == 0 then
+      db.guilds[eid] = nil
+    else
+      entry.messages = kept
+      Store.retag(entry)
+    end
+  end
+end
+
 -- Retention limits (ADR 0004); all of them are settings.
 Store.defaults = { staleDays = 14, pruneDays = 60, maxMessages = 20 }
 
@@ -21,6 +41,10 @@ function Store.init(db)
   db.settings = type(db.settings) == "table" and db.settings or {}
   for k, v in pairs(Store.defaults) do
     if db.settings[k] == nil then db.settings[k] = v end
+  end
+  if db.rulesVersion ~= Store.RULES_VERSION then
+    Store.recheck(db)
+    db.rulesVersion = Store.RULES_VERSION
   end
   return db
 end

@@ -37,7 +37,8 @@ Tags.definitions = {
 
   -- Intensity
   { id = "casual", group = "intensity", label = "Casual", patterns = {
-    word("casual"), word("relaxed"), "laid[%s%-]back", word("no pressure") } },
+    word("casual"), word("relaxed"), "laid[%s%-]back", word("no pressure"), "without %a* ?pressure",
+    word("real life"), word("rl first"), word("life first") } },
   { id = "semihardcore", group = "intensity", label = "Semi-hardcore", patterns = {
     "semi[%s%-]?hardcore", "semi[%s%-]?hc", word("semi") } },
   { id = "hardcore", group = "intensity", label = "Hardcore",
@@ -46,7 +47,8 @@ Tags.definitions = {
 
   -- Wants: roles
   { id = "tank", group = "wants", label = "Tank", patterns = { word("tanks?"), word("tanking") } },
-  { id = "healer", group = "wants", label = "Healer", patterns = { word("heal%a*") } },
+  { id = "healer", group = "wants", label = "Healer", patterns = {
+    word("heals?"), word("healers?"), word("healing"), word("healz"), word("healy"), word("heallers?") } },
   { id = "dps", group = "wants", label = "DPS", patterns = { word("[mr]?dps"), word("dd"), "damage dealers?" } },
   -- Wants: classes ("all classes" adds every one, see below)
   { id = "warrior", group = "wants", label = "Warrior", class = true, patterns = { word("warr?iors?"), word("warr?s?") } },

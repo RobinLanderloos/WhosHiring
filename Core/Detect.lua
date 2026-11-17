@@ -48,6 +48,8 @@ Detect.exclusions = {
   "%f[%a]lf ?%a* guild%f[%A]",      -- "lf raiding guild"
   "looking for an? %a* ?guild%f[%A]", -- "looking for a (chill) guild"
   "%f[%a]any ?%a* guilds? recruit", -- "any guild(s) recruiting"
+  "%f[%a]charter",                  -- buying signatures for a guild charter
+  "%f[%a]signatures?%f[%A]",
 }
 
 -- Trade and services: never a guild advert.

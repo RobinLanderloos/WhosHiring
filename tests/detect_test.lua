@@ -48,3 +48,8 @@ test("a named guild that needs roles is recruitment, a group that needs roles is
   eq(classify("Night Watch guild needs a tank and 2 dps for raids").isRecruit, true, "guild needs tank")
   eq(classify("need 1 healer for SFK").isRecruit, false, "group needs healer")
 end)
+
+test("buying guild charter signatures is not recruitment (seen in Orgrimmar)", function()
+  eq(classify("Looking for people that sign my guild charter for 5s.").isRecruit, false, "charter")
+  eq(classify("need 9 signatures for guild charter, paying 10s").isRecruit, false, "signatures")
+end)

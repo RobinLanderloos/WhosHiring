@@ -280,3 +280,19 @@ test("the debug log keeps the newest near misses up to a cap, and counts channel
   eq(db.debugLog.channels.Trade, 102, "Trade count")
   eq(db.debugLog.channels.General, 103, "General count")
 end)
+
+test("a rules update re-checks saved entries once at load", function()
+  local saved = {
+    rulesVersion = 0,
+    guilds = {
+      ["Realm|?vazak-realm"] = { key = "?vazak-realm", realm = "Realm", unknownPoster = "Vazak-Realm", firstSeen = 1, lastSeen = 1, tags = {},
+        messages = { { sender = "Vazak-Realm", text = "Looking for people that sign my guild charter for 5s.", first = 1, last = 1, count = 1 } } },
+      ["Realm|yes"] = { key = "yes", realm = "Realm", name = "Yes", firstSeen = 1, lastSeen = 1, tags = { healer = "healthier" },
+        messages = { { sender = "Wake-Realm", text = "<Yes> is recruiting! a healthier balance", first = 1, last = 1, count = 1 } } },
+    },
+  }
+  local db = Store.init(saved)
+  eq(db.guilds["Realm|?vazak-realm"], nil, "entry without recruitment messages removed")
+  eq(db.guilds["Realm|yes"].tags.healer, nil, "tags recomputed")
+  eq(db.rulesVersion, Store.RULES_VERSION, "version stored")
+end)

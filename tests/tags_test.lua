@@ -87,3 +87,18 @@ test("the guild's own name does not set tags", function()
   eq(has(ns.Tags.extract("Night Watch is recruiting", "Night Watch"), "evenings"), false, "named")
   eq(has(ns.Tags.extract("Social Butterflies is recruiting raiders", "Social Butterflies"), "social"), false, "named social")
 end)
+
+test("real Trade message: <Yes> (seen in game)", function()
+  local t = tags("<Yes> is recruiting! We're former tryhards who still love the game, but now prefer a healthier balance with real life. We look forward to efficient raiding, PvP and endgame progression together, without the pressure and drama.")
+  eq(has(t, "healer"), false, "healthier is not healer")
+  eq(has(t, "raiding"), true, "raiding")
+  eq(has(t, "pvp"), true, "pvp")
+  eq(has(t, "casual"), true, "without the pressure / real life")
+  eq(has(t, "hardcore"), false, "former tryhards")
+end)
+
+test("healer words still match", function()
+  for _, w in ipairs({ "heal", "heals", "healer", "healers", "healing", "healz", "healy" }) do
+    eq(has(tags("<X> recruiting " .. w), "healer"), true, w)
+  end
+end)
