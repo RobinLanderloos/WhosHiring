@@ -13,8 +13,17 @@ Open the list with `/wh`, `/whoshiring` or the minimap button.
 - Guilds fade after 14 days without posting and are forgotten after 60, unless starred (`/wh config`).
 - `/wh debug` logs messages that almost counted; `/wh report` writes a report into the saved variables.
 
+## Install
+
+- **CurseForge / WowUp:** search for "Who's Hiring?" (WoW Forever).
+- **By hand:** download `WhosHiring-<version>.zip` from the GitHub releases and unzip it into `World of Warcraft\_forever_\Interface\AddOns`.
+
+Questions and bugs: https://github.com/RobinLanderloos/WhosHiring/issues
+
 ## Development
 
 - `luajit tests/run.lua`: unit tests for the pure logic in `Core/`
 - `luajit tests/smoke_test.lua`: loads every file in the .toc against a stand-in for the game
+- `pwsh scripts/package.ps1`: builds the release zip and `release.json` in `dist/`
+- `python tools/make_logo.py`: draws `media/logo.png`
 - Design: `docs/prd/`, decisions: `docs/adr/`, work items: `docs/issues/`
