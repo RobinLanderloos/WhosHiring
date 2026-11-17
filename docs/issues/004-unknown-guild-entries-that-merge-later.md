@@ -4,7 +4,7 @@ Type: AFK
 
 ## State
 
-Open
+Completed
 
 ## What to build
 
@@ -12,9 +12,9 @@ Messages without a parsable guild name create an 'Unknown guild, posted by X' en
 
 ## Acceptance criteria
 
-- [ ] An unparsable message creates an unknown entry (unit test)
-- [ ] A later named message by the same poster merges messages and tags into the guild and removes the unknown entry (unit test)
-- [ ] Unknown entries show as 'Unknown guild, posted by X'
+- [x] An unparsable message creates an unknown entry (unit test)
+- [x] A later named message by the same poster merges messages and tags into the guild and removes the unknown entry (unit test)
+- [x] Unknown entries show as 'Unknown guild, posted by X'
 
 ## Blocked by
 

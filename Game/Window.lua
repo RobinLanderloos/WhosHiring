@@ -64,6 +64,12 @@ local function newRow()
   return row
 end
 
+-- "Night Watch", or "Unknown guild, posted by Bob" (realm left off).
+function Window.DisplayName(r)
+  if r.name then return r.name end
+  return L.UNKNOWN_GUILD:format((r.unknownPoster or "?"):match("^[^-]+"))
+end
+
 local function meta(r, now)
   local posters = r.posters == 1 and L.POSTERS_ONE or L.POSTERS_MANY:format(r.posters)
   local age = ns.Query.age(math.max(now - (r.lastSeen or now), 0))
@@ -82,7 +88,7 @@ function Window.Refresh()
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
     row:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-    row.nameText:SetText(r.name)
+    row.nameText:SetText(Window.DisplayName(r))
     row.metaText:SetText(meta(r, now))
     row.messageText:SetText(r.message)
     row:Show()

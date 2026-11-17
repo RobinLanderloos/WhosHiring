@@ -12,11 +12,28 @@ function Store.init(db)
   db = type(db) == "table" and db or {}
   db.version = db.version or 1
   db.guilds = db.guilds or {}
+  db.posters = db.posters or {} -- sender -> guild key, once a sender named a guild
   return db
+end
+
+-- Entries without a guild name are keyed on their poster.
+function Store.unknownKey(sender)
+  return "?" .. sender:lower()
 end
 
 function Store.get(db, realm, key)
   return db.guilds[id(realm, key)]
+end
+
+-- The poster named their guild: their unknown entry folds into it (ADR 0001).
+local function mergeUnknown(db, entry, sender)
+  local unknownId = id(entry.realm, Store.unknownKey(sender))
+  local unknown = db.guilds[unknownId]
+  if not unknown or unknown == entry then return end
+  for _, m in ipairs(unknown.messages) do entry.messages[#entry.messages + 1] = m end
+  table.sort(entry.messages, function(a, b) return a.first < b.first end)
+  entry.firstSeen = math.min(entry.firstSeen, unknown.firstSeen)
+  db.guilds[unknownId] = nil
 end
 
 -- message = { text, sender, channel, time, realm }
@@ -26,16 +43,29 @@ function Store.record(db, message)
   if not verdict.isRecruit then return "ignored", nil, verdict end
 
   local name = ns.GuildName.parse(message.text)
-  local key = ns.GuildName.normalize(name)
-  if message.ownGuild and ns.GuildName.normalize(message.ownGuild) == key then
+  local key
+  if name then
+    key = ns.GuildName.normalize(name)
+  else
+    -- An unnamed message from a poster whose guild is known goes there.
+    local known = db.posters[message.sender]
+    key = known and Store.get(db, message.realm, known) and known or Store.unknownKey(message.sender)
+  end
+  if name and message.ownGuild and ns.GuildName.normalize(message.ownGuild) == key then
     return "ignored", nil, verdict
   end
+
   local entry = Store.get(db, message.realm, key)
   local status = "updated"
   if not entry then
     status = "new"
     entry = { key = key, realm = message.realm, name = name, firstSeen = message.time, messages = {} }
+    if not name then entry.unknownPoster = message.sender end
     db.guilds[id(message.realm, key)] = entry
+  end
+  if name then
+    db.posters[message.sender] = key
+    mergeUnknown(db, entry, message.sender)
   end
   entry.lastSeen = message.time
   entry.messages[#entry.messages + 1] = {

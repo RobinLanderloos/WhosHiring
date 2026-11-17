@@ -175,6 +175,12 @@ check("a same-realm sender gets the realm added",
   WhosHiringDB.guilds["Realm|iron oath"] and WhosHiringDB.guilds["Realm|iron oath"].messages[1].sender == "Kim-Realm")
 check("a cross-realm guild is keyed on the sender's realm", WhosHiringDB.guilds["Other|ashen order"] ~= nil)
 
+chat("CHAT_MSG_CHANNEL", "We are recruiting! chill levelling guild, /w me", "Zed-Realm", "2. Trade - City", "Trade - City")
+check("an unnamed recruit shows as an unknown guild", shownTexts():find("Unknown guild, posted by Zed", 1, true) ~= nil, shownTexts())
+chat("CHAT_MSG_CHANNEL", "<Dawn Guard> is recruiting", "Zed-Realm", "2. Trade - City", "Trade - City")
+check("the unknown guild merges once named", shownTexts():find("Unknown guild, posted by Zed", 1, true) == nil
+  and shownTexts():find("Dawn Guard", 1, true) ~= nil, shownTexts())
+
 clock = clock + 3 * 3600
 slash("WHOSHIRING", "")
 slash("WHOSHIRING", "")

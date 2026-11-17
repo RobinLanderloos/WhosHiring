@@ -49,7 +49,7 @@
       "id": "004",
       "title": "Unknown guild entries that merge later",
       "description": "Messages without a parsable guild name create an 'Unknown guild, posted by X' entry keyed on the poster. When that poster later names the guild, the unknown entry merges into the guild entry.",
-      "status": "open",
+      "status": "completed",
       "markdownFile": "docs/issues/004-unknown-guild-entries-that-merge-later.md",
       "acceptanceCriteria": [
         "An unparsable message creates an unknown entry (unit test)",

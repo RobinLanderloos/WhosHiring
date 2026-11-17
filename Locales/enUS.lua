@@ -5,6 +5,7 @@ ns.L = {
   TITLE = "Who's Hiring?",
   NOTHING_YET = "No recruiting guilds seen yet.\nThey appear here as they post in chat.",
   NOTHING_MATCHES = "No guilds match these filters.",
+  UNKNOWN_GUILD = "Unknown guild, posted by %s",
   POSTERS_ONE = "1 poster",
   POSTERS_MANY = "%d posters",
   SEEN = "seen %s ago",

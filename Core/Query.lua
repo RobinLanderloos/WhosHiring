@@ -12,6 +12,8 @@ local function row(entry)
     entry = entry,
     name = entry.name,
     message = latest and latest.text or "",
+    unknownPoster = entry.unknownPoster,
+    sortName = (entry.name or entry.unknownPoster or ""):lower(),
     posters = ns.Store.posterCount(entry),
     lastSeen = entry.lastSeen,
   }
@@ -25,7 +27,7 @@ function Query.list(db, options)
   end
   table.sort(rows, function(a, b)
     if a.lastSeen ~= b.lastSeen then return a.lastSeen > b.lastSeen end
-    return a.name < b.name
+    return a.sortName < b.sortName
   end)
   return rows
 end
