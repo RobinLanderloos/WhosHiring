@@ -211,7 +211,7 @@ local function place()
   else
     local main = _G.WhosHiringFrame
     if main and main:IsShown() then
-      frame:SetPoint("TOPLEFT", main, "TOPRIGHT", 6, 0)
+      frame:SetPoint("TOPLEFT", main, "TOPRIGHT", 14, 0)
     else
       frame:SetPoint("CENTER")
     end
