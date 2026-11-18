@@ -9,8 +9,10 @@ for _, file in ipairs({
   "Core/Detect.lua",
   "Core/GuildName.lua",
   "Core/Tags.lua",
+  "Core/Lang/nl.lua",
   "Core/Store.lua",
   "Core/Query.lua",
+  "Core/Who.lua",
   "Core/Alert.lua",
   "Core/Geometry.lua",
 }) do
@@ -39,8 +41,10 @@ for _, file in ipairs({
   "tests/detect_test.lua",
   "tests/guildname_test.lua",
   "tests/tags_test.lua",
+  "tests/lang_nl_test.lua",
   "tests/store_test.lua",
   "tests/query_test.lua",
+  "tests/who_test.lua",
   "tests/alert_test.lua",
   "tests/geometry_test.lua",
 }) do

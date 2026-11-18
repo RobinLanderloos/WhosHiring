@@ -36,25 +36,6 @@ test("the who query searches the guild name in quotes", function()
   eq(ns.GuildName.whoQuery(nil), nil, "no name, no query")
 end)
 
-test("online members keep only the guild's own members, sorted by name", function()
-  local results = {
-    { fullName = "Zed-Realm", fullGuildName = "Night Watch", level = 60, classStr = "Warrior", area = "Orgrimmar" },
-    { fullName = "Amy-Realm", fullGuildName = "night watch", level = 42, classStr = "Priest", area = "Barrens" },
-    { fullName = "Bo-Realm", fullGuildName = "Night Watchers", level = 30, classStr = "Mage", area = "Durotar" },
-  }
-  local members = ns.GuildName.onlineMembers(results, "Night Watch")
-  eq(#members, 2, "Night Watchers left out")
-  eq(members[1].name, "Amy-Realm", "sorted")
-  eq(members[1].level, 42, "level")
-  eq(members[1].class, "Priest", "class")
-  eq(members[1].zone, "Barrens", "zone")
-end)
-
-test("when no result matches the name exactly, all results are kept", function()
-  local results = { { fullName = "Bo-Realm", fullGuildName = "Night Watchers" } }
-  eq(#ns.GuildName.onlineMembers(results, "Night Watch"), 1)
-end)
-
 local GREEK = "[Bibo Ergo Sum] \206\149\206\187\206\187\206\183\206\189\206\185\206\186\207\140 Horde PvE Guild \206\186\206\172\206\189\206\181\206\185 recruit! /w me"
 
 test("a name in square brackets at the start is the guild name (seen in Trade)", function()

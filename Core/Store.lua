@@ -8,7 +8,7 @@ ns.Store = Store
 local function id(realm, key) return realm .. "|" .. key end
 
 -- Raise when Detect or Tags rules change, so saved entries are re-checked.
-Store.RULES_VERSION = 3
+Store.RULES_VERSION = 4
 
 -- An unknown entry whose messages now show a guild name moves into that
 -- guild (created if needed). Returns true when it moved.

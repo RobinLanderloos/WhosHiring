@@ -34,6 +34,7 @@ Detect.weakSignals = {
   "%f[%a]needs? %a* ?%a* ?tanks?%f[%A]",
   "%f[%a]needs? %a* ?%a* ?heal",
   "%f[%a]needs? %a* ?%a* ?dps%f[%A]",
+  "%f[%a]join our%f[%A]",              -- "join our (community) guild"
 }
 
 -- What makes a weak signal count.
@@ -68,6 +69,16 @@ Detect.groupExclusions = {
   "%f[%a]sm%f[%A]", "%f[%a]rfd%f[%A]", "%f[%a]ulda", "%f[%a]zf%f[%A]", "%f[%a]mara%f[%A]",
   "%f[%a]brd%f[%A]", "%f[%a][lu]brs%f[%A]", "%f[%a]scholo", "%f[%a]strat%f[%A]",
 }
+
+-- Language files (Core/Lang) add their patterns with this:
+-- Detect.addRules({ recruitSignals = {...}, weakSignals = {...}, ... }).
+function Detect.addRules(rules)
+  for list, patterns in pairs(rules) do
+    local target = Detect[list]
+    assert(type(target) == "table", "unknown rule list " .. tostring(list))
+    for _, p in ipairs(patterns) do target[#target + 1] = p end
+  end
+end
 
 local function firstMatch(t, patterns)
   for _, p in ipairs(patterns) do

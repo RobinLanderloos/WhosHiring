@@ -5,16 +5,22 @@ local GuildName = {}
 ns.GuildName = GuildName
 
 -- Words that are never part of a guild name found without brackets.
-local stopwords = {}
+-- Language files (Core/Lang) add to these tables.
+GuildName.stopwords = {}
+local stopwords = GuildName.stopwords
 for w in ([[we our us you i my the a an new hey hi hello all guild guilds
   lf lfm come join is are recruiting casual friendly]]):gmatch("%S+") do
   stopwords[w] = true
 end
 
 -- Verbs that follow a guild name: "<name> is recruiting", "<name> recruiting".
-local afterIs = { recruiting = true, lf = true, lfm = true, looking = true, seeking = true,
+GuildName.afterIs = { recruiting = true, lf = true, lfm = true, looking = true, seeking = true,
   accepting = true, recruits = true }
-local direct = { recruiting = true, recruits = true }
+-- Verbs that directly follow a guild name.
+GuildName.direct = { recruiting = true, recruits = true }
+-- Words for "guild", skipped between a name and its verb.
+GuildName.guildWords = { guild = true }
+local afterIs, direct, guildWords = GuildName.afterIs, GuildName.direct, GuildName.guildWords
 
 local function split(text)
   local words = {}
@@ -45,7 +51,7 @@ end
 -- Capitalised words ending just before index i, at most four.
 local function nameBefore(words, i)
   local last = i - 1
-  if words[last] and words[last].lower == "guild" then last = last - 1 end
+  if words[last] and guildWords[words[last].lower] then last = last - 1 end
   local first = last + 1
   while first > 1 and last - first < 3 do
     local w = words[first - 1]
@@ -96,7 +102,7 @@ function GuildName.parse(text)
     if name then return name end
   end
   for i, w in ipairs(words) do
-    if w.lower == "guild" or w.lower == "join" then
+    if guildWords[w.lower] or w.lower == "join" then
       name = nameAfter(words, i)
       if name then return name end
     end
@@ -112,24 +118,4 @@ end
 function GuildName.whoQuery(name)
   if not name or name == "" then return nil end
   return 'g-"' .. name:gsub('"', "") .. '"'
-end
-
--- Members from /who results (C_FriendList.GetWhoInfo tables). `g-` matches
--- part of a guild name, so only exact matches are kept, unless there are none.
-function GuildName.onlineMembers(results, name)
-  local key = name and GuildName.normalize(name)
-  local exact, all = {}, {}
-  for _, info in ipairs(results) do
-    local member = {
-      name = info.fullName or "?", guild = info.fullGuildName,
-      level = info.level, class = info.classStr, zone = info.area,
-    }
-    all[#all + 1] = member
-    if key and info.fullGuildName and GuildName.normalize(info.fullGuildName) == key then
-      exact[#exact + 1] = member
-    end
-  end
-  local list = #exact > 0 and exact or all
-  table.sort(list, function(a, b) return a.name < b.name end)
-  return list
 end

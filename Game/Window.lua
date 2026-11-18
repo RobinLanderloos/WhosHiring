@@ -148,7 +148,7 @@ local function newRow()
   row.whoButton:SetSize(120, 20)
   row.whoButton:SetText(L.WHO_ONLINE)
   row.whoButton:SetScript("OnClick", function()
-    if row.data and row.data.name then Window.WhoOnline(row.data.id, row.data.name) end
+    if row.data and row.data.name then ns.WhoWindow.Open(row.data.name, row.data.entry and row.data.entry.messages) end
   end)
   row.whoButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -207,63 +207,6 @@ function Window.ShowTagTooltip(owner, r)
     GameTooltip:AddDoubleLine(t.label, L.TAG_FROM:format(t.word), 1, 1, 1, 0.7, 0.7, 0.7)
   end
   GameTooltip:Show()
-end
-
--- Who's online: runs /who g-"Name" and lists the members in the row.
--- Forever has no Who tab in the Friends window (its Who list sits in the
--- LFG window), and small results go to chat, so the addon shows them itself.
-local online = {}      -- row id -> { status = "searching" | "done" | "noanswer", members }
-local pendingWho       -- row id waiting for WHO_LIST_UPDATE
-local WHO_TIMEOUT = 6  -- seconds; the server answers nothing when throttled
-
-local function whoResults()
-  local results = {}
-  local n = C_FriendList.GetNumWhoResults and C_FriendList.GetNumWhoResults() or 0
-  for i = 1, n do
-    local info = C_FriendList.GetWhoInfo(i)
-    if info then results[#results + 1] = info end
-  end
-  return results
-end
-
-local whoEvents = CreateFrame("Frame")
-whoEvents:RegisterEvent("WHO_LIST_UPDATE")
-whoEvents:SetScript("OnEvent", function()
-  local id = pendingWho
-  if not id then return end
-  pendingWho = nil
-  if C_FriendList.SetWhoToUi then C_FriendList.SetWhoToUi(false) end -- /who behaves as before
-  local ok, results = pcall(whoResults)
-  if not ok then results = {} end
-  local name = online[id] and online[id].name
-  online[id] = { status = "done", name = name, members = ns.GuildName.onlineMembers(results, name) }
-  if ns.db.whoDebug then
-    ns.db.whoDebug.answered = true
-    ns.db.whoDebug.results = #results
-    ns.db.whoDebug.error = not ok and tostring(results) or nil
-  end
-  Window.Refresh()
-end)
-
-function Window.WhoOnline(id, name)
-  local query = ns.GuildName.whoQuery(name)
-  if not query or not (C_FriendList and C_FriendList.SendWho) then return end
-  ns.db.whoDebug = { query = query, setWhoToUi = C_FriendList.SetWhoToUi ~= nil }
-  -- Results to the event instead of chat, for this search only.
-  if C_FriendList.SetWhoToUi then C_FriendList.SetWhoToUi(true) end
-  pendingWho = id
-  online[id] = { status = "searching", name = name }
-  local origin = Enum and Enum.SocialWhoOrigin and Enum.SocialWhoOrigin.Social
-  C_FriendList.SendWho(query, origin)
-  C_Timer.After(WHO_TIMEOUT, function()
-    if pendingWho == id then
-      pendingWho = nil
-      if C_FriendList.SetWhoToUi then C_FriendList.SetWhoToUi(false) end
-      online[id].status = "noanswer"
-      Window.Refresh()
-    end
-  end)
-  Window.Refresh()
 end
 
 -- Opens a whisper to a poster in the chat edit box.
@@ -327,47 +270,6 @@ local function plainLine(line)
   line.text:SetPoint("RIGHT", line, "RIGHT", -84, 0)
 end
 
--- The Who's online answer under the button: a status line, or the members
--- with a Whisper button each.
-local MAX_ONLINE_SHOWN = 5
-local function fillOnline(row, r, y, used, width)
-  local state = online[r.id]
-  if not state then return y, used end
-  local function line(text, sender)
-    used = used + 1
-    local l = detailLine(row, used)
-    plainLine(l)
-    l:ClearAllPoints()
-    l:SetPoint("TOPLEFT", row, "TOPLEFT", 24, -y)
-    l:SetSize(width - 34, 18)
-    l.text:SetFontObject("GameFontHighlightSmall")
-    l.text:SetWidth(width - 120)
-    l.text:SetWordWrap(false)
-    l.text:SetText(text)
-    l.whisper.sender = sender
-    l.whisper:SetShown(sender ~= nil)
-    l:Show()
-    y = y + 20
-  end
-  if state.status == "searching" then
-    line(L.WHO_SEARCHING)
-  elseif state.status == "noanswer" then
-    line(L.WHO_NO_ANSWER)
-  elseif #state.members == 0 then
-    line(L.WHO_NOBODY)
-  else
-    line(L.WHO_ONLINE_COUNT:format(#state.members))
-    for i, m in ipairs(state.members) do
-      if i > MAX_ONLINE_SHOWN then
-        line(L.WHO_MORE:format(#state.members - MAX_ONLINE_SHOWN))
-        break
-      end
-      line(L.WHO_MEMBER:format(shortName(m.name), tostring(m.level or "?"), m.class or "", m.zone or ""), m.name)
-    end
-  end
-  return y + 4, used
-end
-
 -- Lays out every poster and their messages below the row; returns the height.
 -- One colour per poster, so their message blocks are told apart at a glance.
 local POSTER_COLORS = {
@@ -385,7 +287,6 @@ local function fillDetails(row, r, now, width)
     row.whoButton:SetPoint("TOPLEFT", row, "TOPLEFT", 14, -y)
     row.whoButton:Show()
     y = y + 24
-    y, used = fillOnline(row, r, y, used, width)
   else
     row.whoButton:Hide() -- an unknown guild has no name to search
   end

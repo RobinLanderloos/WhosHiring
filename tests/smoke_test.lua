@@ -396,19 +396,39 @@ nightRow = rowOf("Night Watch")
 nightRow.scripts.OnClick(nightRow)
 check("an open named guild has a Who's online button", visible(nightRow.whoButton))
 nightRow.whoButton.scripts.OnClick(nightRow.whoButton)
+local whoFrame = find(function(w) return rawget(w, "name") == "WhosHiringWhoFrame" end)
+check("the button opens the Who window", whoFrame ~= nil and visible(whoFrame))
 check("the button searches the guild's online members", whoQuery == 'g-"Night Watch"', tostring(whoQuery))
 check("results are routed away from chat during the search", whoToUi == true)
-check("the row says it is searching", shownTexts():find("Searching...", 1, true) ~= nil, shownTexts())
+check("the window says it is searching", shownTexts():find("Searching...", 1, true) ~= nil, shownTexts())
+whoResults[#whoResults + 1] = { fullName = "Kim", fullGuildName = "Night Watch", level = 12, classStr = "Rogue", area = "Barrens" }
 fire("WHO_LIST_UPDATE")
+local function whoRows()
+  local out = {}
+  for _, w in ipairs(widgets) do
+    if rawget(w, "member") and visible(w) then out[#out + 1] = w.member.name end
+  end
+  return table.concat(out, ",")
+end
 texts = shownTexts()
-check("the row lists the guild's online members", texts:find("Online now: 1", 1, true) ~= nil
-  and texts:find("Olly · 60 Warrior · Orgrimmar", 1, true) ~= nil and texts:find("Pip", 1, true) == nil, texts)
+check("the window lists the guild's exact members", whoRows() == "Kim,Olly-Realm", whoRows())
+check("posters are counted", texts:find("2 online · 0 posted the ad", 1, true) ~= nil, texts)
 check("/who goes back to normal afterwards", whoToUi == false)
-local ollyWhisper = find(function(w) return rawget(w, "sender") == "Olly-Realm" and visible(w) end)
-check("online members have a whisper button", ollyWhisper ~= nil)
+local function whoButton(label)
+  return find(function(w) return type(rawget(w, "text")) == "string" and w.text:find("^" .. label) and visible(w)
+    and w.scripts.OnClick end)
+end
+whoButton("Level").scripts.OnClick(whoButton("Level"))
+check("sorting by level puts the highest first", whoRows() == "Olly-Realm,Kim", whoRows())
+check("the sort is saved", WhosHiringDB.ui.who.sort == "level")
+whoButton("Level").scripts.OnClick(whoButton("Level"))
+check("clicking the sort again reverses it", whoRows() == "Kim,Olly-Realm" and WhosHiringDB.ui.who.reverse == true, whoRows())
+local ollyWhisper = find(function(w) return rawget(w, "member") and w.member.name == "Olly-Realm" end)
+ollyWhisper.whisper.scripts.OnClick(ollyWhisper.whisper)
+check("online members can be whispered", whispered == "Olly", tostring(whispered))
 check("the search is noted for diagnosis", WhosHiringDB.whoDebug and WhosHiringDB.whoDebug.answered == true
-  and WhosHiringDB.whoDebug.results == 2)
-nightRow.whoButton.scripts.OnClick(nightRow.whoButton)
+  and WhosHiringDB.whoDebug.results == 3)
+whoButton("Search again").scripts.OnClick(whoButton("Search again"))
 runTimers()
 check("no answer from the server is explained", shownTexts():find("No answer", 1, true) ~= nil, shownTexts())
 nightRow.scripts.OnClick(nightRow)

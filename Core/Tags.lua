@@ -100,6 +100,25 @@ Tags.definitions = {
 Tags.byId = {}
 for _, def in ipairs(Tags.definitions) do Tags.byId[def.id] = def end
 
+Tags.word = word
+
+-- Language files (Core/Lang) use these two.
+-- A new tag, placed right after the tag `afterId` (or at the end).
+function Tags.add(def, afterId)
+  local at = #Tags.definitions + 1
+  for i, d in ipairs(Tags.definitions) do
+    if d.id == afterId then at = i + 1 end
+  end
+  table.insert(Tags.definitions, at, def)
+  Tags.byId[def.id] = def
+end
+
+-- More words for an existing tag.
+function Tags.addPatterns(id, patterns)
+  local def = assert(Tags.byId[id], "unknown tag " .. tostring(id))
+  for _, p in ipairs(patterns) do def.patterns[#def.patterns + 1] = p end
+end
+
 local ALL_CLASSES = { "all classes", "any class", "all class" }
 
 -- The earliest match of any pattern: its text, or nil.
