@@ -20,6 +20,12 @@ Open the list with `/wh`, `/whoshiring` or the minimap button.
 
 Questions and bugs: https://github.com/RobinLanderloos/WhosHiring/issues
 
+## Screenshots
+
+![The list of guilds recruiting, with tags and the latest ad](.previews/recruitment-list.png)
+
+![The members of a guild who are online, next to the list (player names blurred)](.previews/who-online.png)
+
 ## Development
 
 - `luajit tests/run.lua`: unit tests for the pure logic in `Core/`
