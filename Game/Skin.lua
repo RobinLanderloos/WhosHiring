@@ -2,7 +2,8 @@
 -- round the quest log's parchment (toned down so light text reads on it), the gold header plate for the title, red panel
 -- buttons, the stock tick boxes, text box and scroll knob, tooltip-bordered
 -- inner panels. The same file ships in every addon (DustOrGold, FieldGuide,
--- OpenSpot, RouteKeeper, WhosHiring); keep the copies identical.
+-- OpenSpot, RouteKeeper, Warehouse, WhosHiring); keep the copies
+-- identical.
 --
 -- Every piece is a texture drawn on the frame itself (no BackdropTemplate),
 -- cut from the vanilla files the way the client's templates cut them; the
@@ -36,6 +37,7 @@ local ACCENTS = {
   RouteKeeper = { 0.82, 0.49, 0.27 },
   WhosHiring = { 0.42, 0.68, 0.64 },
   OpenSpot = { 0.47, 0.64, 0.86 },
+  Warehouse = { 0.66, 0.53, 0.8 },
 }
 local accent = ACCENTS[addonName] or ACCENTS.DustOrGold
 Skin.accent = accent
