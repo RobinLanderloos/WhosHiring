@@ -105,7 +105,7 @@ local function newRow()
       Window.Refresh()
     end
   end)
-  row.restoreButton = ns.Skin.Button(CreateFrame("Button", nil, row))
+  row.restoreButton = ns.Skin.Button(ns.Skin.Create("Button", nil, row, ns.Skin.TEMPLATES.Button))
   row.restoreButton:SetSize(76, 20)
   row.restoreButton:SetPoint("TOPRIGHT", -6, -3)
   row.restoreButton:SetText(L.RESTORE)
@@ -144,7 +144,7 @@ local function newRow()
   row.detailLines = {} -- reused widgets of the expanded part
 
   -- Opens the Who window on this guild's online members (shown when open).
-  row.whoButton = ns.Skin.Button(CreateFrame("Button", nil, row))
+  row.whoButton = ns.Skin.Button(ns.Skin.Create("Button", nil, row, ns.Skin.TEMPLATES.Button))
   row.whoButton:SetSize(120, 20)
   row.whoButton:SetText(L.WHO_ONLINE)
   row.whoButton:SetScript("OnClick", function()
@@ -251,7 +251,7 @@ local function detailLine(row, index)
   line.text:SetPoint("TOPLEFT", 0, 0)
   line.text:SetPoint("RIGHT", line, "RIGHT", -84, 0)
   line.text:SetJustifyH("LEFT")
-  line.whisper = ns.Skin.Button(CreateFrame("Button", nil, line))
+  line.whisper = ns.Skin.Button(ns.Skin.Create("Button", nil, line, ns.Skin.TEMPLATES.Button))
   line.whisper:SetSize(76, 18)
   line.whisper:SetPoint("TOPRIGHT", 0, 2)
   line.whisper:SetText(L.WHISPER)
@@ -396,7 +396,7 @@ function Window.Refresh()
 end
 
 local function build()
-  frame = ns.Skin.Window(CreateFrame("Frame", FRAME_NAME, UIParent))
+  frame = ns.Skin.Window(ns.Skin.Create("Frame", FRAME_NAME, UIParent, ns.Skin.TEMPLATES.Window))
   frame:SetFrameStrata("HIGH")
   frame:SetMovable(true)
   frame:SetResizable(true)
@@ -437,7 +437,7 @@ local function build()
   -- Tabs: All, Starred, Dismissed.
   local previous
   for _, tab in ipairs({ { "all", L.TAB_ALL }, { "starred", L.TAB_STARRED }, { "dismissed", L.TAB_DISMISSED } }) do
-    local b = ns.Skin.Button(CreateFrame("Button", nil, frame))
+    local b = ns.Skin.Button(ns.Skin.Create("Button", nil, frame, ns.Skin.TEMPLATES.Button))
     b:SetSize(84, 20)
     if previous then b:SetPoint("LEFT", previous, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 12, -30) end
     b:SetText(tab[2])

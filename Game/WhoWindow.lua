@@ -67,7 +67,7 @@ local function newRow(index)
   row.levelText = text(150, 30)
   row.classText = text(184, 76)
   row.zoneText = text(264)
-  row.whisper = ns.Skin.Button(CreateFrame("Button", nil, row))
+  row.whisper = ns.Skin.Button(ns.Skin.Create("Button", nil, row, ns.Skin.TEMPLATES.Button))
   row.whisper:SetSize(70, 16)
   row.whisper:SetPoint("RIGHT", -4, 0)
   row.whisper:SetText(L.WHISPER)
@@ -219,7 +219,7 @@ local function place()
 end
 
 local function check(label, help, key)
-  local cb = ns.Skin.Check(CreateFrame("CheckButton", nil, frame), 20)
+  local cb = ns.Skin.Check(ns.Skin.Create("CheckButton", nil, frame, ns.Skin.TEMPLATES.Check), 20)
   cb.Text:SetFontObject("GameFontHighlightSmall")
   cb.Text:SetText(label)
   cb:SetScript("OnClick", function(self)
@@ -237,7 +237,7 @@ local function check(label, help, key)
 end
 
 local function build()
-  frame = ns.Skin.Window(CreateFrame("Frame", FRAME_NAME, UIParent))
+  frame = ns.Skin.Window(ns.Skin.Create("Frame", FRAME_NAME, UIParent, ns.Skin.TEMPLATES.Window))
   frame:SetSize(WIDTH, HEIGHT)
   frame:SetFrameStrata("HIGH")
   frame:SetToplevel(true)
@@ -252,7 +252,7 @@ local function build()
   frame:SetClampedToScreen(true)
   tinsert(UISpecialFrames, FRAME_NAME) -- Escape closes it
 
-  local again = ns.Skin.Button(CreateFrame("Button", nil, frame))
+  local again = ns.Skin.Button(ns.Skin.Create("Button", nil, frame, ns.Skin.TEMPLATES.Button))
   again:SetSize(110, 20)
   again:SetPoint("TOPLEFT", 12, -32)
   again:SetText(L.WHO_AGAIN)
@@ -263,7 +263,7 @@ local function build()
     end
   end)
 
-  searchBox = ns.Skin.Input(CreateFrame("EditBox", nil, frame))
+  searchBox = ns.Skin.Input(ns.Skin.Create("EditBox", nil, frame, ns.Skin.TEMPLATES.Input))
   searchBox:SetSize(170, 20)
   searchBox:SetPoint("TOPRIGHT", -12, -32)
   searchBox:SetScript("OnTextChanged", function() WhoWindow.Refresh() end)
@@ -277,7 +277,7 @@ local function build()
   sortLabel:SetText(L.WHO_SORT)
   local previous = sortLabel
   for _, key in ipairs(ns.Who.SORTS) do
-    local b = ns.Skin.Button(CreateFrame("Button", nil, frame))
+    local b = ns.Skin.Button(ns.Skin.Create("Button", nil, frame, ns.Skin.TEMPLATES.Button))
     b:SetSize(96, 20)
     b:SetPoint("LEFT", previous, "RIGHT", previous == sortLabel and 8 or 4, 0)
     b:SetScript("OnClick", function()
